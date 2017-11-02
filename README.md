@@ -26,12 +26,12 @@ Example of `layout.jsx` view file
 Example of router
 ```javascript
 app.get('/users', function (req, res) {
-	res.render('users', {
-		users: [
-			{name: 'Max'},
-			{name: 'Bob'}
-		]
-	});
+  res.render('users', {
+    users: [
+      {name: 'Max'},
+      {name: 'Bob'}
+    ]
+  });
 });
 ```
 
