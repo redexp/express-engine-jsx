@@ -67,9 +67,9 @@ var requireJSX = require('express-engine-jsx/require');
 module.exports = function (props) {
   var __components__ = [];
   with (props) {
-  	var Layout = requireJSX('./layout');
-  	
-  	__components__.push(
+    var Layout = requireJSX('./layout');
+
+    __components__.push(
       React.createElement(
       	Layout, 
       	null,
@@ -93,16 +93,16 @@ module.exports = function (props) {
 
 and now this component can be rendered to html with `ReactDOM.renderToStaticMarkup()`.
 
-As you can see, each jsx view file returns array of components
+As you can see, each jsx view file returns array of components and standard html attributes are converted to react attributes
 ```jsx harmony
-<div id="first"></div>
-<div id="second"></div>
+<div class="first" tabindex="1"></div>
+<div class="second" tabindex="2"></div>
 ```
 
 ```javascript
 //...
-__components__.push(React.createElement('div', {id: 'first'}));
-__components__.push(React.createElement('div', {id: 'second'}));
+__components__.push(React.createElement('div', {className: 'first', tabIndex: '1'}));
+__components__.push(React.createElement('div', {className: 'second', tabIndex: '2'}));
 //...
 
 return __components__;
