@@ -115,7 +115,7 @@ var express = require('express');
 var app = express();
 
 require('express-engine-jsx').attachTo(app, {
-  cache: __dirname + '/cache', // required and should be absolute path to cache dir of compiled js files
+  cache: __dirname + '/cache', // required and should be absolute path to cache dir for compiled js files
   views: __dirname + '/views', // required and should be absolute path to views dir with jsx files
   doctype: '<!DOCTYPE html>'   // optional and this is default value
 });
