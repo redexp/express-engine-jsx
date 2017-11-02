@@ -1,0 +1,38 @@
+{
+  "name": "express-engine-jsx",
+  "version": "1.0.0",
+  "description": "JSX engine for ExpressJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redexp/express-engine-jsx.git"
+  },
+  "keywords": [
+    "express",
+    "engine",
+    "jsx",
+    "react"
+  ],
+  "author": "Sergii Kliuchnyk <redexp@ukr.net> (https://github.com/redexp)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/redexp/express-engine-jsx/issues"
+  },
+  "homepage": "https://github.com/redexp/express-engine-jsx#readme",
+  "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-template": "^6.26.0",
+    "babel-traverse": "^6.26.0",
+    "babel-types": "^6.26.0",
+    "babylon": "^6.18.0",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1"
+  }
+}
