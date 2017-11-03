@@ -1,5 +1,7 @@
 # express-engine-jsx
 
+[![Build Status](https://travis-ci.org/redexp/express-engine-jsx.svg?branch=master)](https://travis-ci.org/redexp/express-engine-jsx)
+
 Example of `users.jsx` view file
 ```jsx harmony
 var Layout = require('./layout');
