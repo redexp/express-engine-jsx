@@ -3,11 +3,18 @@ var fs = require('fs');
 var options = require('./options');
 var convert = require('./convert');
 
-var local = /^.?\//;
+var local = /^\.*\//;
 
 module.exports = function (path, dirname) {
 	if (!local.test(path)) {
-		return require(path);
+		var resolvedPath = resolve(path);
+
+		if (!resolvedPath) {
+			return require(path);
+		}
+
+		path = resolvedPath;
+		dirname = null;
 	}
 
 	if (dirname) {
@@ -40,3 +47,14 @@ module.exports = function (path, dirname) {
 
 	return require(path);
 };
+
+function resolve(path) {
+	try {
+		path = require.resolve(path + '.jsx');
+	}
+	catch (e) {
+		return null;
+	}
+
+	return path.replace(/\.jsx$/, '');
+}

@@ -1,0 +1,1 @@
+console.log(require.resolve('express-engine-jsx/tests/views/layout.jsx'));

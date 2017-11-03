@@ -4,17 +4,19 @@ var traverse = require('babel-traverse').default;
 var template = require('babel-template');
 var t = require('babel-types');
 var fs = require('fs');
+var p = require('path');
+var attrMap = require('./data/attr-map');
 
 var createExportFunctionWith = template(`
 var React = require('react');
-var requireJSX = require('/home/sergii/Projects/express-view-react/src/require');
+var requireJSX = require('express-engine-jsx/require');
 
-module.exports = function (__params__) {
-	var __elements__ = [];
+module.exports = function (props) {
+	var __components = [];
 	
 	WITH
 	
-	return __elements__;
+	return __components;
 };
 `);
 
@@ -35,7 +37,7 @@ module.exports = function (jsxPath, outPath) {
 				if (item.isExpressionStatement() && item.node.expression.type === 'JSXElement') {
 					item.replaceWith(
 						t.callExpression(
-							t.memberExpression(t.identifier('__elements__'), t.identifier('push')),
+							t.memberExpression(t.identifier('__components'), t.identifier('push')),
 							[item.node.expression]
 						)
 					);
@@ -44,13 +46,13 @@ module.exports = function (jsxPath, outPath) {
 
 			path.traverse({
 				JSXAttribute: function (attr) {
-					switch (attr.node.name.name) {
-					case 'class':
+					var name = attr.node.name.name;
+
+					if (name === 'class') {
 						attr.node.name.name = 'className';
-						break;
-					case 'charset':
-						attr.node.name.name = 'charSet';
-						break;
+					}
+					else if (attrMap.hasOwnProperty(name)) {
+						attr.node.name.name = attrMap[name];
 					}
 				},
 				CallExpression: function (func) {
@@ -67,7 +69,7 @@ module.exports = function (jsxPath, outPath) {
 
 	ast = createExportFunctionWith({
 		WITH: t.withStatement(
-			t.identifier('__params__'),
+			t.identifier('props'),
 			t.blockStatement(ast.program.body)
 		)
 	});
@@ -81,5 +83,38 @@ module.exports = function (jsxPath, outPath) {
 		]
 	});
 
+	mkdir(outPath);
+
 	fs.writeFileSync(outPath, res.code);
 };
+
+function mkdir(path) {
+	path = path.replace(/\/[^\/]+\.\w+$/, '');
+
+	if (fs.existsSync(path)) return;
+
+	path = path.match(/\/[^\/]+/g);
+
+	var root = '';
+	var dirs = [];
+	var i, len;
+
+	for (i = path.length; i >= 0; i--) {
+		root = path.join('');
+
+		if (!fs.existsSync(root)) {
+			dirs.push(path.pop());
+		}
+		else {
+			break;
+		}
+	}
+
+	dirs.reverse();
+
+	for (i = 0, len = dirs.length; i < len; i++) {
+		root += dirs[i];
+
+		fs.mkdirSync(root);
+	}
+}
