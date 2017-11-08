@@ -196,13 +196,13 @@ options.cache = __dirname + '/cache';
 options.views = __dirname + '/views';
 
 app.locals.component = function (path, props) {
-	var currentEjsFile = this.filename;
-	var currentDirectory = pt.dirname(currentEjsFile);
-	var Component = requireJSX(currentDirectory + '/' + path);
-	
-	props = Object.assign({}, this, props || {});
-    
-    return ReactDOM.renderToStaticMarkup(Component(props));
+  var currentEjsFile = this.filename;
+  var currentDirectory = pt.dirname(currentEjsFile);
+  var Component = requireJSX(currentDirectory + '/' + path);
+
+  props = Object.assign({}, this, props || {});
+
+  return ReactDOM.renderToStaticMarkup(Component(props));
 };
 ```
 
