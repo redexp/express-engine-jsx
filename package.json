@@ -1,10 +1,10 @@
 {
   "name": "express-engine-jsx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "JSX engine for ExpressJS",
   "main": "index.js",
   "scripts": {
-    "test": "ln -sfn ../ ./node_modules/express-engine-jsx && rm -rf tests/cache/ && NODE_ENV=production ./node_modules/.bin/mocha -R spec tests"
+    "test": "ln -sfn ../ ./node_modules/express-engine-jsx && NODE_ENV=production ./node_modules/.bin/mocha -R spec tests"
   },
   "repository": {
     "type": "git",

@@ -125,6 +125,62 @@ require('express-engine-jsx').attachTo(app, {
 
 That's it, you no need to do `app.set('views', 'views')` and so on, `attachTo` will do that for you
 
+## API
+
+### engine
+
+```javascript
+var engine = require('express-engine-jsx');
+```
+
+It's a function which takes three arguments:
+
+ * `path` - path to jsx file
+ * `locals` - object with properties which will be local variables in jsx file
+ * `callback` - Node style callback which will receive html string as second argument
+
+Also it has method `attachTo` which takes two arguments:
+
+ * `server` - Express instance
+ * `options` - object which will be merged to [options](#options)
+
+### options
+
+```javascript
+var options = require('express-engine-jsx/options');
+```
+
+Object which has three properties:
+
+ * `cache` - absolute path to cache directory
+ * `views` - absolute path to views directory
+ * `doctype` - string which will be prepended to output html, default value is `"<!DOCTYPE html>\n"`
+
+This options used by [require](#require)
+
+### require
+
+```javascript
+var requireJSX = require('express-engine-jsx/require');
+```
+
+This is a function which you can use as regular `require` but this one can run jsx files. It checks if path is jsx file and if it is then `requireJSX` will [convert](#convert) this file to js file and put in [cache](#options) dir and then run it.
+
+### convert
+
+```javascript
+var convert = require('express-engine-jsx/convert');
+```
+
+It is a function which can convert jsx view files to js files. It takes only two arguments:
+
+ * `jsxPath` - path to jsx file
+ * `jsPath` - path where js file should be saved
+ 
+## How to update cache
+
+Best way is to watch jsx files with you favorite tool like gulp or grunt and use [convert](#convert) to update cached files.
+
 ## License
 
 MIT, see `LICENSE` file

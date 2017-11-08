@@ -1,9 +1,8 @@
 var p = require('path');
 var fs = require('fs');
 var options = require('./options');
-var convert = require('./convert');
 
-var local = /^\.*\//;
+var local = /^\.{0,2}\//;
 
 module.exports = function (path, dirname) {
 	if (!local.test(path)) {
@@ -57,4 +56,8 @@ function resolve(path) {
 	}
 
 	return path.replace(/\.jsx$/, '');
+}
+
+function convert(jsxPath, cachePath) {
+	return require('./convert')(jsxPath, cachePath);
 }
