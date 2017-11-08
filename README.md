@@ -181,6 +181,37 @@ It is a function which can convert jsx view files to js files. It takes only two
 
 Best way is to watch jsx files with you favorite tool like gulp or grunt and use [convert](#convert) to update cached files.
 
+## How to integrate to other engine
+
+For example how to integrate to [ejs](https://www.npmjs.com/package/ejs)
+
+```javascript
+var express = require('express');
+var app = express();
+var options = require('express-engine-jsx/options');
+var requireJSX = require('express-engine-jsx/require');
+var pt = require('path');
+
+options.cache = __dirname + '/cache';
+options.views = __dirname + '/views';
+
+app.locals.component = function (path, props) {
+	var currentEjsFile = this.filename;
+	var currentDirectory = pt.dirname(currentEjsFile);
+	var Component = requireJSX(currentDirectory + '/' + path);
+	
+	props = Object.assign({}, this, props || {});
+    
+    return ReactDOM.renderToStaticMarkup(Component(props));
+};
+```
+
+Now we can use `component()` in ejs files like this
+
+```ejs
+<div><%- component('button', {title: 'Submit'}) %></div>
+```
+
 ## License
 
 MIT, see `LICENSE` file
