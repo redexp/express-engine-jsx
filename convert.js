@@ -4,21 +4,10 @@ var traverse = require('babel-traverse').default;
 var template = require('babel-template');
 var t = require('babel-types');
 var fs = require('fs');
-var p = require('path');
 var attrMap = require('./data/attr-map');
+var options = require('./options');
 
-var createExportFunctionWith = template(`
-var React = require('react');
-var requireJSX = require('express-engine-jsx/require');
-
-module.exports = function (props) {
-	var __components = [];
-	
-	WITH
-	
-	return __components;
-};
-`);
+var createExportFunction;
 
 module.exports = function (jsxPath, outPath) {
 	var code = fs.readFileSync(jsxPath).toString();
@@ -67,11 +56,12 @@ module.exports = function (jsxPath, outPath) {
 		}
 	});
 
-	ast = createExportFunctionWith({
-		WITH: t.withStatement(
-			t.identifier('props'),
-			t.blockStatement(ast.program.body)
-		)
+	if (!createExportFunction) {
+		createExportFunction = template(options.template);
+	}
+
+	ast = createExportFunction({
+		BODY: ast.program.body
 	});
 
 	ast = t.program(ast);

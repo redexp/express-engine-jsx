@@ -155,6 +155,23 @@ Object which has three properties:
  * `cache` - absolute path to cache directory
  * `views` - absolute path to views directory
  * `doctype` - string which will be prepended to output html, default value is `"<!DOCTYPE html>\n"`
+ * `template` - string wrapper of compiled jsx, default value is
+   
+   ```javascript
+   var React = require('react');
+   var requireJSX = require('express-engine-jsx/require');
+   
+   module.exports = function (props) {
+   	 var __components = [];
+   	 
+   	 with (props) {
+       BODY
+	 }
+   	
+   	 return __components;
+   };
+   ```
+   Where `BODY` will be replaced with your compiled jsx code
 
 This options used by [require](#require)
 
