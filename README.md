@@ -162,13 +162,13 @@ Object which has three properties:
    var requireJSX = require('express-engine-jsx/require');
    
    module.exports = function (props) {
-   	 var __components = [];
-   	 
-   	 with (props) {
+     var __components = [];
+      
+     with (props) {
        BODY
-	 }
+     }
    	
-   	 return __components;
+     return __components;
    };
    ```
    Where `BODY` will be replaced with your compiled jsx code
