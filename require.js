@@ -25,10 +25,13 @@ module.exports = function (path, dirname) {
 	}
 
 	if (path.indexOf(options.cache) === 0) {
-		var jsxPath = path.replace(options.cache, options.views) + '.jsx';
+		var viewsPath = path.replace(options.cache, options.views);
 
-		if (fs.existsSync(jsxPath)) {
-			convert(jsxPath, path + '.js');
+		if (fs.existsSync(viewsPath + '.jsx')) {
+			convert(viewsPath + '.jsx', path + '.js');
+		}
+		else if (fs.existsSync(viewsPath + '.js')) {
+			return require(viewsPath);
 		}
 	}
 	else if (path.indexOf(options.views) === 0) {
