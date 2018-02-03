@@ -155,6 +155,7 @@ Object which has three properties:
  * `cache` - absolute path to cache directory
  * `views` - absolute path to views directory
  * `doctype` - string which will be prepended to output html, default value is `"<!DOCTYPE html>\n"`
+ * `replace` - optional function which will take output html (without doctype) and it should return new html
  * `template` - string wrapper of compiled jsx, default value is
    
    ```javascript

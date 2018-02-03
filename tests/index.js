@@ -47,4 +47,33 @@ describe('convert', function () {
 
 		expect(html).to.equal(fs.readFileSync(__dirname + '/html/users.html').toString());
 	});
+
+	it('should replace html', function (done) {
+		engine.setOptions({
+			doctype: '',
+			replace: function (html) {
+				return html.replace(/^<html doctype="(\d+)"/, function (x, version) {
+					var doctype = version === '4' ?
+						'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n' :
+						"<!DOCTYPE html>\n"
+					;
+
+					return doctype + '<html';
+				})
+			}
+		});
+
+		engine(__dirname + '/views/doctype.jsx', {version: 4}, function (err, html) {
+			expect(html).to.equal(
+				`<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n<html></html>`
+			);
+		});
+
+		engine(__dirname + '/views/doctype.jsx', {version: 5}, function (err, html) {
+			expect(html).to.equal(
+				`<!DOCTYPE html>\n<html></html>`
+			);
+			done();
+		});
+	});
 });

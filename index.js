@@ -7,11 +7,13 @@ module.exports = engine;
 
 function engine(path, params, cb) {
 	var Component = requireJSX(path.replace(/\.jsx$/, ''));
+	var html = ReactDOM.renderToStaticMarkup(React.createElement(Component, params));
 
-	cb(null,
-		options.doctype +
-		ReactDOM.renderToStaticMarkup(React.createElement(Component, params))
-	);
+	if (options.replace) {
+		html = options.replace(html);
+	}
+
+	cb(null, options.doctype + html);
 }
 
 engine.attachTo = function (server, params) {
@@ -51,6 +53,10 @@ engine.setOptions = function (params) {
 
 	if (params.hasOwnProperty('doctype')) {
 		options.doctype = params.doctype;
+	}
+
+	if (params.hasOwnProperty('replace')) {
+		options.replace = params.replace;
 	}
 
 	return engine;

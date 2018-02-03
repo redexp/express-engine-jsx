@@ -1,0 +1,1 @@
+<html doctype={version}></html>
