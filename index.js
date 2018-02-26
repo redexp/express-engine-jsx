@@ -2,6 +2,7 @@ var options = require('./options');
 var requireJSX = require('./require');
 var React = require('react');
 var ReactDOM = require('react-dom/server');
+var isAbsolute = require('path').isAbsolute;
 
 module.exports = engine;
 
@@ -36,7 +37,7 @@ engine.attachTo = function (server, params) {
 
 engine.setOptions = function (params) {
 	if (params.cache) {
-		if (params.cache.charAt(0) !== '/') {
+		if (!isAbsolute(params.cache)) {
 			throw new Error('Parameter "cache" should be absolute path to directory');
 		}
 
@@ -44,7 +45,7 @@ engine.setOptions = function (params) {
 	}
 
 	if (params.views) {
-		if (params.views.charAt(0) !== '/') {
+		if (!isAbsolute(params.views)) {
 			throw new Error('Parameter "views" should be absolute path to directory');
 		}
 
