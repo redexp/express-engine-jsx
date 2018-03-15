@@ -3,12 +3,16 @@ var requireJSX = require('./require');
 var React = require('react');
 var ReactDOM = require('react-dom/server');
 var isAbsolute = require('path').isAbsolute;
+var Provider = require('./Provider');
 
 module.exports = engine;
 
 function engine(path, params, cb) {
 	var Component = requireJSX(path.replace(/\.jsx$/, ''));
-	var html = ReactDOM.renderToStaticMarkup(React.createElement(Component, params));
+	var html = ReactDOM.renderToStaticMarkup(
+		React.createElement(Provider, params,
+			React.createElement(Component, params))
+	);
 
 	if (options.replace) {
 		html = options.replace(html);

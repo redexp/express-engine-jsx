@@ -1,6 +1,7 @@
 var expect = require('chai').expect;
 var engine = require('../index');
 var requireJSX = require('../require');
+var options = require('../options');
 var ReactDOM = require('react-dom/server');
 var fs = require('fs');
 var exec = require('child_process').exec;
@@ -31,6 +32,19 @@ describe('convert', function () {
 		}));
 
 		expect(html).to.equal(fs.readFileSync(__dirname + '/html/users.html').toString());
+	});
+
+	it('should convert users view with engine', function (done) {
+		engine(__dirname + '/views/app/users.jsx', {
+			users: [
+				{name: 'Max'},
+				{name: 'Bob'},
+			]
+		}, function (err, html) {
+			expect(err).to.equal(null);
+			expect(html).to.equal(options.doctype + fs.readFileSync(__dirname + '/html/users.html').toString());
+			done();
+		});
 	});
 
 	it('should convert with cache in views dir', function () {
