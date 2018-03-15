@@ -9,9 +9,10 @@ var requireJSX = require('express-engine-jsx/require');
 
 module.exports = function (props, context) {
   context = context || {};
+  context.locals = context.locals || {};
   var __components = [];
 
-  with (context) {
+  with (context.locals) {
     with (props) {
       BODY
     }
