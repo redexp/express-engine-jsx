@@ -29,7 +29,6 @@
     "@babel/template": "^7.4.4",
     "@babel/traverse": "^7.4.5",
     "@babel/types": "^7.4.4",
-    "babel-plugin-transform-remove-strict-mode": "0.0.2",
     "react": ">=16.6",
     "react-dom": ">=16.6"
   },
