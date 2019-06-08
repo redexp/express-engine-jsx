@@ -17,7 +17,7 @@ const Layout = require('./layout');
 
 Example of `layout.jsx` view file
 ```jsx harmony
-<html>
+<html lang={lang}>
 <head>
   <meta charset="UTF-8"/>
 </head>
@@ -28,6 +28,7 @@ Example of `layout.jsx` view file
 Example of router
 ```javascript
 app.get('/users', function (req, res) {
+  res.locals.lang = 'en';
   res.render('users', {
     users: [
       {name: 'Max'},
@@ -40,7 +41,7 @@ app.get('/users', function (req, res) {
 Output html
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head><meta charset="UTF-8"/></head>
 <body><ul class="users"><li>Max</li><li>Bob</li></ul></body>
 </html>
@@ -96,6 +97,8 @@ module.exports = function (props, context) {
   }
   return __components;
 };
+
+module.exports.contextType = Context;
 ```
 
 and now this component can be rendered to html with `ReactDOM.renderToStaticMarkup()`.
