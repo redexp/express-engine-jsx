@@ -1,16 +1,16 @@
-var options = require('./options');
-var requireJSX = require('./require');
-var React = require('react');
-var ReactDOM = require('react-dom/server');
-var isAbsolute = require('path').isAbsolute;
-var Provider = require('./Provider');
+const React = require('react');
+const ReactDOM = require('react-dom/server');
+const {isAbsolute} = require('path');
+const options = require('./options');
+const requireJSX = require('./require');
+const Context = require('./Context');
 
 module.exports = engine;
 
 function engine(path, params, cb) {
 	var Component = requireJSX(path.replace(/\.jsx$/, ''));
 	var html = ReactDOM.renderToStaticMarkup(
-		React.createElement(Provider, params,
+		React.createElement(Context.Provider, {value: {locals: params._locals, settings: params.settings}},
 			React.createElement(Component, params))
 	);
 

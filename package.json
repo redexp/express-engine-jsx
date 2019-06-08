@@ -23,19 +23,18 @@
   },
   "homepage": "https://github.com/redexp/express-engine-jsx#readme",
   "dependencies": {
-    "babel-core": "^6.26.0",
-    "babel-plugin-transform-react-jsx": "^6.24.1",
-    "babel-template": "^6.26.0",
-    "babel-traverse": "^6.26.0",
-    "babel-types": "^6.26.0",
-    "babylon": "^6.18.0",
-    "react": "*",
-    "react-dom": "*",
-    "create-react-class": "*",
-    "prop-types": "*"
+    "@babel/core": "^7.4.5",
+    "@babel/parser": "^7.4.5",
+    "@babel/plugin-transform-react-jsx": "^7.3.0",
+    "@babel/template": "^7.4.4",
+    "@babel/traverse": "^7.4.5",
+    "@babel/types": "^7.4.4",
+    "babel-plugin-transform-remove-strict-mode": "0.0.2",
+    "react": ">=16.6",
+    "react-dom": ">=16.6"
   },
   "devDependencies": {
-    "mocha": "^4.0.1",
-    "chai": "^4.1.2"
+    "chai": "^4.2.0",
+    "mocha": "^4.1.0"
   }
 }

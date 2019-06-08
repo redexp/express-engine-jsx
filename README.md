@@ -4,7 +4,7 @@
 
 Example of `users.jsx` view file
 ```jsx harmony
-var Layout = require('./layout');
+const Layout = require('./layout');
 
 <Layout>
   <ul class="users">
@@ -50,7 +50,7 @@ Output html
 
 When you render some view, this engine takes `jsx` file like this
 ```jsx harmony
-var Layout = require('./layout');
+const Layout = require('./layout');
 
 <Layout>
   <ul class="users">
@@ -63,31 +63,36 @@ var Layout = require('./layout');
 
 and compiles it to `js` file like this
 ```javascript
-var React = require('react');
-var requireJSX = require('express-engine-jsx/require');
+const React = require('react');
+const requireJSX = require('express-engine-jsx/require');
+const Context = require('express-engine-jsx/Context');
 
-module.exports = function (props) {
+module.exports = function (props, context) {
+  var locals = context && context.locals || {};
   var __components = [];
-  with (props) {
-    var Layout = requireJSX('./layout');
-
-    __components.push(
-      React.createElement(
-      	Layout, 
-      	null,
-      	React.createElement(
-      	  'ul',
-      	  {className: 'users'},
-      	  users.map(user => (
+  
+  with (locals) {
+      with (props) {
+        const Layout = requireJSX('./layout');
+    
+        __components.push(
+          React.createElement(
+            Layout, 
+            null,
             React.createElement(
-              'li',
-              {key: user},
-              user.name
+              'ul',
+              {className: 'users'},
+              users.map(user => (
+                React.createElement(
+                  'li',
+                  {key: user},
+                  user.name
+                )
+              ))
             )
-          ))
-      	)
-      )
-    );
+          )
+        );
+      }
   }
   return __components;
 };
@@ -113,13 +118,14 @@ return __components;
 ## Usage
 
 ```javascript
-var express = require('express');
-var app = express();
+const express = require('express');
+const {join} = require('path');
+const app = express();
 
 require('express-engine-jsx').attachTo(app, {
-  cache: __dirname + '/cache', // required and should be absolute path to cache dir for compiled js files
-  views: __dirname + '/views', // required and should be absolute path to views dir with jsx files
-  doctype: '<!DOCTYPE html>'   // optional and this is default value
+  cache: join(__dirname, 'cache'), // required and should be absolute path to cache dir for compiled js files
+  views: join(__dirname, 'views'), // required and should be absolute path to views dir with jsx files
+  doctype: "<!DOCTYPE html>\n"   // optional and this is default value
 });
 ```
 
@@ -130,7 +136,7 @@ That's it, you no need to do `app.set('views', 'views')` and so on, `attachTo` w
 ### engine
 
 ```javascript
-var engine = require('express-engine-jsx');
+const engine = require('express-engine-jsx');
 ```
 
 It's a function which takes three arguments:
@@ -147,7 +153,7 @@ Also it has method `attachTo` which takes two arguments:
 ### options
 
 ```javascript
-var options = require('express-engine-jsx/options');
+const options = require('express-engine-jsx/options');
 ```
 
 Object which has three properties:
@@ -159,18 +165,24 @@ Object which has three properties:
  * `template` - string wrapper of compiled jsx, default value is
    
    ```javascript
-   var React = require('react');
-   var requireJSX = require('express-engine-jsx/require');
-   
-   module.exports = function (props) {
-     var __components = [];
-      
-     with (props) {
-       BODY
-     }
-   	
-     return __components;
+   const React = require('react');
+   const requireJSX = require('express-engine-jsx/require');
+   const Context = require('express-engine-jsx/Context');
+    
+   module.exports = function (props, context) {
+      var locals = context && context.locals || {};
+      var __components = [];
+    
+      with (locals) {
+        with (props) {
+          BODY
+        }
+      }
+    
+      return __components;
    };
+    
+   module.exports.contextType = Context;
    ```
    Where `BODY` will be replaced with your compiled jsx code
 
@@ -179,7 +191,7 @@ This options used by [require](#require)
 ### require
 
 ```javascript
-var requireJSX = require('express-engine-jsx/require');
+const requireJSX = require('express-engine-jsx/require');
 ```
 
 This is a function which you can use as regular `require` but this one can run jsx files. It checks if path is jsx file and if it is then `requireJSX` will [convert](#convert) this file to js file and put in [cache](#options) dir and then run it.
@@ -187,7 +199,7 @@ This is a function which you can use as regular `require` but this one can run j
 ### convert
 
 ```javascript
-var convert = require('express-engine-jsx/convert');
+const convert = require('express-engine-jsx/convert');
 ```
 
 It is a function which can convert jsx view files to js files. It takes only two arguments:
@@ -204,11 +216,11 @@ Best way is to watch jsx files with you favorite tool like gulp or grunt and use
 For example how to integrate to [ejs](https://www.npmjs.com/package/ejs)
 
 ```javascript
-var express = require('express');
-var app = express();
-var options = require('express-engine-jsx/options');
-var requireJSX = require('express-engine-jsx/require');
-var pt = require('path');
+const express = require('express');
+const app = express();
+const options = require('express-engine-jsx/options');
+const requireJSX = require('express-engine-jsx/require');
+const pt = require('path');
 
 options.cache = __dirname + '/cache';
 options.views = __dirname + '/views';
@@ -228,6 +240,49 @@ Now we can use `component()` in ejs files like this
 
 ```ejs
 <div><%- component('button', {title: 'Submit'}) %></div>
+```
+
+## Problem with more than one component in template root
+
+In javascript you can omit `;` and write like this
+
+```javascript
+"first"
+"second"
+```
+
+It do nothing but it's valid code. In JSX you can't do same thing with elements
+
+```html
+<div>first</div>
+<div>second</div>
+```
+
+It will throw compilation error. It waiting for `;` after first element. You have three options to solve this problem.
+
+First - use `;`
+
+```jsx harmony
+<div>first</div>;
+<div>second</div>
+```
+
+Second - use `<Fragment>`
+
+```jsx harmony
+<Fragment>
+    <div>first</div>
+    <div>second</div>
+</Fragment>
+```
+
+Third - use short Fragment notation `<>...</>`
+
+```jsx harmony
+<>
+    <div>first</div>
+    <div>second</div>
+</>
 ```
 
 ## License

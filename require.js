@@ -1,8 +1,8 @@
-var p = require('path');
-var fs = require('fs');
-var options = require('./options');
+const {join} = require('path');
+const fs = require('fs');
+const options = require('./options');
 
-var local = /^\.{0,2}\//;
+const local = /^\.{0,2}\//;
 
 module.exports = function (path, dirname) {
 	if (!local.test(path)) {
@@ -17,7 +17,7 @@ module.exports = function (path, dirname) {
 	}
 
 	if (dirname) {
-		path = p.join(dirname, path);
+		path = join(dirname, path);
 	}
 
 	if (fs.existsSync(path + '.js')) {

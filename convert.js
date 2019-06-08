@@ -1,18 +1,18 @@
-var babel = require('babel-core');
-var babylon = require('babylon');
-var traverse = require('babel-traverse').default;
-var template = require('babel-template');
-var t = require('babel-types');
-var fs = require('fs');
-var attrMap = require('./data/attr-map');
-var options = require('./options');
+const babel = require('@babel/core');
+const parser = require('@babel/parser');
+const traverse = require('@babel/traverse').default;
+const template = require('@babel/template').default;
+const t = require('@babel/types');
+const fs = require('fs');
+const attrMap = require('./data/attr-map');
+const options = require('./options');
 
 var createExportFunction;
 
 module.exports = function (jsxPath, outPath) {
 	var code = fs.readFileSync(jsxPath).toString();
 
-	var ast = babylon.parse(code, {
+	var ast = parser.parse(code, {
 		sourceType: "module",
 		strictMode: false,
 		plugins: [
@@ -23,7 +23,13 @@ module.exports = function (jsxPath, outPath) {
 	traverse(ast, {
 		enter: function prepare(path) {
 			path.get('body').forEach(function (item) {
-				if (item.isExpressionStatement() && item.node.expression.type === 'JSXElement') {
+				if (
+					item.isExpressionStatement() &&
+					(
+						item.node.expression.type === 'JSXElement' ||
+						item.node.expression.type === 'JSXFragment'
+					)
+				) {
 					item.replaceWith(
 						t.callExpression(
 							t.memberExpression(t.identifier('__components'), t.identifier('push')),
@@ -57,7 +63,12 @@ module.exports = function (jsxPath, outPath) {
 	});
 
 	if (!createExportFunction) {
-		createExportFunction = template(options.template);
+		createExportFunction = template(options.template, {
+			parser: {
+				strictMode: false
+			},
+			strictMode: false
+		});
 	}
 
 	ast = createExportFunction({
@@ -69,7 +80,7 @@ module.exports = function (jsxPath, outPath) {
 	var res = babel.transformFromAst(ast, '', {
 		ast: false,
 		plugins: [
-			'transform-react-jsx'
+			'@babel/plugin-transform-react-jsx'
 		]
 	});
 

@@ -1,4 +1,4 @@
-var Layout = require('express-engine-jsx/tests/views/layout');
+var Layout = require('../layout');
 var Users = require('./components/users');
 var helper = require('./helpers/script');
 

@@ -3,16 +3,15 @@ module.exports = {
 	views: '',
 	doctype: "<!DOCTYPE html>\n",
 	template: `
-var React = require('react');
-var PropTypes = require('prop-types');
-var requireJSX = require('express-engine-jsx/require');
+const React = require('react');
+const requireJSX = require('express-engine-jsx/require');
+const Context = require('express-engine-jsx/Context');
 
 module.exports = function (props, context) {
-  context = context || {};
-  context.locals = context.locals || {};
+  var locals = context && context.locals || {};
   var __components = [];
 
-  with (context.locals) {
+  with (locals) {
     with (props) {
       BODY
     }
@@ -21,9 +20,6 @@ module.exports = function (props, context) {
   return __components;
 };
 
-module.exports.contextTypes = {
-  locals: PropTypes.object,
-  settings: PropTypes.object
-};
+module.exports.contextType = Context;
 `
 };
