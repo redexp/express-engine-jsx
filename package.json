@@ -1,6 +1,6 @@
 {
   "name": "express-engine-jsx",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "JSX engine for ExpressJS",
   "main": "index.js",
   "scripts": {
