@@ -1,5 +1,5 @@
 <ul class="users">
 	{users.map(user => (
-		<li>{user.name}</li>
+		<li key={user.name}>{user.name}</li>
 	))}
 </ul>

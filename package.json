@@ -1,6 +1,6 @@
 {
   "name": "express-engine-jsx",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "JSX engine for ExpressJS",
   "main": "index.js",
   "scripts": {
@@ -23,17 +23,17 @@
   },
   "homepage": "https://github.com/redexp/express-engine-jsx#readme",
   "dependencies": {
-    "@babel/core": "^7.4.5",
-    "@babel/parser": "^7.4.5",
+    "@babel/core": "^7.6.3",
+    "@babel/parser": "^7.6.3",
     "@babel/plugin-transform-react-jsx": "^7.3.0",
-    "@babel/template": "^7.4.4",
-    "@babel/traverse": "^7.4.5",
-    "@babel/types": "^7.4.4",
+    "@babel/template": "^7.6.0",
+    "@babel/traverse": "^7.6.3",
+    "@babel/types": "^7.6.3",
     "react": ">=16.6",
     "react-dom": ">=16.6"
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^6.1.4"
+    "mocha": "^6.2.1"
   }
 }

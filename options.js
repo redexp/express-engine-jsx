@@ -5,21 +5,21 @@ module.exports = {
 	template: `
 const React = require('react');
 const requireJSX = require('express-engine-jsx/require');
-const Context = require('express-engine-jsx/Context');
+const EngineContext = require('express-engine-jsx/Context');
 
-module.exports = function (props, context) {
-  var locals = context && context.locals || {};
-  var __components = [];
+module.exports = function (props) {
+  return React.createElement(EngineContext.Consumer, null, (context) => {
+    var {locals = {}} = context;
+    const __components = [];
 
-  with (locals) {
-    with (props) {
-      BODY
+    with (locals) {
+      with (props) {
+        BODY
+      }
     }
-  }
 
-  return __components;
+    return __components;
+  });
 };
-
-module.exports.contextType = Context;
 `
 };
