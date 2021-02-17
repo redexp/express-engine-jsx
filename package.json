@@ -1,10 +1,11 @@
 {
   "name": "express-engine-jsx",
-  "version": "2.0.4",
+  "version": "2.1.0",
   "description": "JSX engine for ExpressJS",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "test": "ln -sfn ../ ./node_modules/express-engine-jsx && NODE_ENV=production ./node_modules/.bin/mocha -R spec tests"
+    "test": "NODE_ENV=production ./node_modules/.bin/mocha -R spec tests"
   },
   "repository": {
     "type": "git",
@@ -23,17 +24,19 @@
   },
   "homepage": "https://github.com/redexp/express-engine-jsx#readme",
   "dependencies": {
-    "@babel/core": "^7.6.3",
-    "@babel/parser": "^7.6.3",
-    "@babel/plugin-transform-react-jsx": "^7.3.0",
-    "@babel/template": "^7.6.0",
-    "@babel/traverse": "^7.6.3",
-    "@babel/types": "^7.6.3",
-    "react": ">=16.6",
-    "react-dom": ">=16.6"
+    "@babel/core": "^7.12.16",
+    "@babel/parser": "^7.12.16",
+    "@babel/plugin-transform-react-jsx": "^7.12.16",
+    "@babel/template": "^7.12.13",
+    "@babel/traverse": "^7.12.13",
+    "@babel/types": "^7.12.13"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^6.2.1"
+    "chai": "^4.3.0",
+    "mocha": "^8.3.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8",
+    "react-dom": ">=16.6"
   }
 }

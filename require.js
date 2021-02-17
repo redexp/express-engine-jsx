@@ -1,56 +1,54 @@
-const {join} = require('path');
+const {resolve, dirname} = require('path');
 const fs = require('fs');
-const options = require('./options');
+const convert = require('./convert');
 
 const local = /^\.{0,2}\//;
+const engineModule = /^express-engine-jsx(\/|$)/;
 
-module.exports = function (path, dirname) {
+module.exports = requireJSX;
+
+requireJSX.cache = {};
+
+function requireJSX(path, currentDir) {
 	if (!local.test(path)) {
-		var resolvedPath = resolve(path);
+		if (engineModule.test(path)) {
+			return require(path.replace(engineModule, './'));
+		}
+
+		var resolvedPath = resolveJSX(path);
 
 		if (!resolvedPath) {
 			return require(path);
 		}
 
 		path = resolvedPath;
-		dirname = null;
+		currentDir = null;
 	}
 
-	if (dirname) {
-		path = join(dirname, path);
+	if (currentDir) {
+		path = resolve(currentDir, path);
 	}
+
+	let {cache} = requireJSX;
+
+	if (cache[path]) return run(cache[path]);
 
 	if (fs.existsSync(path + '.js')) {
 		return require(path);
 	}
 
-	if (path.indexOf(options.cache) === 0) {
-		var viewsPath = path.replace(options.cache, options.views);
-
-		if (fs.existsSync(viewsPath + '.jsx')) {
-			convert(viewsPath + '.jsx', path + '.js');
-		}
-		else if (fs.existsSync(viewsPath + '.js')) {
-			return require(viewsPath);
-		}
-	}
-	else if (path.indexOf(options.views) === 0) {
-		var cachePath = path.replace(options.views, options.cache);
-
-		if (fs.existsSync(cachePath + '.js')) {
-			return require(cachePath + '.js');
-		}
-
-		if (fs.existsSync(path + '.jsx')) {
-			convert(path + '.jsx', cachePath + '.js');
-			path = cachePath;
-		}
+	if (!fs.existsSync(path + '.jsx')) {
+		throw new Error(`JSX file not found ${JSON.stringify(path)}`);
 	}
 
-	return require(path);
-};
+	let script = cache[path] = convert(path + '.jsx');
 
-function resolve(path) {
+	script.dirname = dirname(path);
+
+	return run(cache[path]);
+}
+
+function resolveJSX(path) {
 	try {
 		path = require.resolve(path + '.jsx');
 	}
@@ -61,6 +59,20 @@ function resolve(path) {
 	return path.replace(/\.jsx$/, '');
 }
 
-function convert(jsxPath, cachePath) {
-	return require('./convert')(jsxPath, cachePath);
+function run(script) {
+	if (script.result) return script.result;
+
+	const context = {
+		module: {
+			exports: {}
+		},
+		__dirname: script.dirname,
+		require: requireJSX,
+	};
+
+	script.runInNewContext(context);
+
+	script.result = context.module.exports;
+
+	return script.result;
 }

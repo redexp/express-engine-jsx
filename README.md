@@ -9,7 +9,7 @@ const Layout = require('./layout');
 <Layout>
   <ul class="users">
     {users.map(user => (
-    	<li key={user}>{user.name}</li>
+      <li key={user}>{user.name}</li>
     ))}
   </ul>
 </Layout>
@@ -56,7 +56,7 @@ const Layout = require('./layout');
 <Layout>
   <ul class="users">
     {users.map(user => (
-    	<li key={user}>{user.name}</li>
+      <li key={user}>{user.name}</li>
     ))}
   </ul>
 </Layout>
@@ -68,37 +68,37 @@ const React = require('react');
 const requireJSX = require('express-engine-jsx/require');
 const Context = require('express-engine-jsx/Context');
 
-module.exports = function (props, context) {
-  var locals = context && context.locals || {};
-  var __components = [];
-  
+module.exports = function (props) {
+  const __components = [];
+  const context = React.useContext(EngineContext);
+  const locals = context.locals || {};
+ 
   with (locals) {
-      with (props) {
-        const Layout = requireJSX('./layout');
-    
-        __components.push(
+    with (props) {
+      const Layout = requireJSX('./layout');
+
+      __components.push(
+        React.createElement(
+          Layout, 
+          null,
           React.createElement(
-            Layout, 
-            null,
-            React.createElement(
-              'ul',
-              {className: 'users'},
-              users.map(user => (
-                React.createElement(
-                  'li',
-                  {key: user},
-                  user.name
-                )
-              ))
-            )
+            'ul',
+            {className: 'users'},
+            users.map(user => (
+              React.createElement(
+                'li',
+                {key: user},
+                user.name
+              )
+            ))
           )
-        );
-      }
+        )
+      );
+    }
   }
+  
   return __components;
 };
-
-module.exports.contextType = Context;
 ```
 
 and now this component can be rendered to html with `ReactDOM.renderToStaticMarkup()`.
@@ -122,13 +122,19 @@ return __components;
 
 ```javascript
 const express = require('express');
-const {join} = require('path');
 const app = express();
+const engine = require('express-engine-jsx');
 
-require('express-engine-jsx').attachTo(app, {
-  cache: join(__dirname, 'cache'), // required and should be absolute path to cache dir for compiled js files
-  views: join(__dirname, 'views'), // required and should be absolute path to views dir with jsx files
-  doctype: "<!DOCTYPE html>\n"   // optional and this is default value
+server.set('views', '/path/to/views');
+server.set('view engine', 'jsx');
+server.engine('jsx', engine);
+
+// optionaly
+engine.setOptions({
+  doctype: "<!DOCTYPE html>\n", // prepended string to every output html
+  templatePath: '/path/to/template.jsx', // path to base tamplete of component for all jsx templates. Default is "express-engine-jsx/template.jsx",
+  replace: (html) => {return html}, // Modify final html with this callback 
+  parserOptions: {}, // See https://babeljs.io/docs/en/babel-parser#options
 });
 ```
 
@@ -146,12 +152,11 @@ It's a function which takes three arguments:
 
  * `path` - path to jsx file
  * `locals` - object with properties which will be local variables in jsx file
- * `callback` - Node style callback which will receive html string as second argument
+ * `callback` - optional Node style callback which will receive html string as second argument
 
-Also it has method `attachTo` which takes two arguments:
+If you pass to `engine` only path and locals then it will return html.
 
- * `server` - Express instance
- * `options` - object which will be merged to [options](#options)
+Also it has method `setOptions` which can modify [options](#options)
 
 ### options
 
@@ -159,37 +164,12 @@ Also it has method `attachTo` which takes two arguments:
 const options = require('express-engine-jsx/options');
 ```
 
-Object which has three properties:
+Object with optional properties:
 
- * `cache` - absolute path to cache directory
- * `views` - absolute path to views directory
  * `doctype` - string which will be prepended to output html, default value is `"<!DOCTYPE html>\n"`
- * `replace` - optional function which will take output html (without doctype) and it should return new html
- * `template` - string wrapper of compiled jsx, default value is
-   
-   ```javascript
-   const React = require('react');
-   const requireJSX = require('express-engine-jsx/require');
-   const Context = require('express-engine-jsx/Context');
-    
-   module.exports = function (props, context) {
-      var locals = context && context.locals || {};
-      var __components = [];
-    
-      with (locals) {
-        with (props) {
-          BODY
-        }
-      }
-    
-      return __components;
-   };
-    
-   module.exports.contextType = Context;
-   ```
-   Where `BODY` will be replaced with your compiled jsx code
-
-This options used by [require](#require)
+ * `replace` - function which will take output html (without doctype) and it should return new html
+ * `templatePath` - path to wrapper of compiled jsx, default value is `express-engine-jsx/template.jsx`. Undefined variable `BODY` will be replaced with your compiled jsx code.
+ * `parserOptions` - options for [babel.parser](https://babeljs.io/docs/en/babel-parser#options)
 
 ### require
 
@@ -197,7 +177,10 @@ This options used by [require](#require)
 const requireJSX = require('express-engine-jsx/require');
 ```
 
-This is a function which you can use as regular `require` but this one can run jsx files. It checks if path is jsx file and if it is then `requireJSX` will [convert](#convert) this file to js file and put in [cache](#options) dir and then run it.
+This is a function which you can use as regular `require` but this one can run jsx files. It checks if path is jsx file and if it is then `requireJSX` will [convert](#convert) this file to js code and then run it.
+
+Every compiled jsx file will be cached to `requireJSX.cache` object where key will be path to jsx file and value will be [vm.Script](https://nodejs.org/api/vm.html#vm_class_vm_script). 
+You can delete any key in this cache, requireJSX will recompile jsx file on next call.
 
 ### convert
 
@@ -205,15 +188,32 @@ This is a function which you can use as regular `require` but this one can run j
 const convert = require('express-engine-jsx/convert');
 ```
 
-It is a function which can convert jsx view files to js files. It takes only two arguments:
+It is a function which can convert jsx view files to [vm.Script](https://nodejs.org/api/vm.html#vm_class_vm_script).
+```js
+const script = convert('/path/to/view.jsx');
 
- * `jsxPath` - path to jsx file
- * `jsPath` - path where js file should be saved
+const context = {
+   module: {
+      exports: {}
+   },
+   __dirname: script.dirname,
+   require: requireJSX,
+};
+
+script.runInNewContext(context);
+
+const ViewComponent = context.module.exports;
+```
+
+## attr-map
+
+```javascript
+const attrMap = require('express-engine-jsx/attr-map');
+```
+
+This is an object where keys are names of html attributes in lower case like `class` and values are valid React html attributes like `className`. 
+You can modify this object if I forget about some attributes.
  
-## How to update cache
-
-Best way is to watch jsx files with you favorite tool like gulp or grunt and use [convert](#convert) to update cached files.
-
 ## How to integrate to other engine
 
 For example how to integrate to [ejs](https://www.npmjs.com/package/ejs)
@@ -221,28 +221,20 @@ For example how to integrate to [ejs](https://www.npmjs.com/package/ejs)
 ```javascript
 const express = require('express');
 const app = express();
-const options = require('express-engine-jsx/options');
-const requireJSX = require('express-engine-jsx/require');
-const pt = require('path');
+const engine = require('express-engine-jsx');
+const {dirname, resolve} = require('path');
 
-options.cache = __dirname + '/cache';
-options.views = __dirname + '/views';
+app.locals.component = function (path, props = {}) {
+  props = Object.assign({}, this, props);
 
-app.locals.component = function (path, props) {
-  var currentEjsFile = this.filename;
-  var currentDirectory = pt.dirname(currentEjsFile);
-  var Component = requireJSX(currentDirectory + '/' + path);
-
-  props = Object.assign({}, this, props || {});
-
-  return ReactDOM.renderToStaticMarkup(Component(props));
+  return engine(resolve(dirname(this.filename), path), props);
 };
 ```
 
 Now we can use `component()` in ejs files like this
 
 ```ejs
-<div><%- component('button', {title: 'Submit'}) %></div>
+<div><%- component('path/to/jsx-view', {prop: 'value'}) %></div>
 ```
 
 ## Problem with more than one component in template root
@@ -267,7 +259,7 @@ First - use `;`
 
 ```jsx harmony
 <div>first</div>;
-<div>second</div>
+<div>second</div>;
 ```
 
 Second - use `<Fragment>`

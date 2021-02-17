@@ -1,14 +1,19 @@
-var fs = require('fs');
-var list = fs.readFileSync(process.argv[2]).toString();
-list = JSON.parse(list);
-list = list
+const fs = require('fs');
+const {resolve} = require('path');
+
+const namesPath = resolve(__dirname, '..', 'data', 'attr-names.json');
+const mapPath = resolve(__dirname, '..', 'attr-map.json');
+
+let list = fs.readFileSync(namesPath).toString();
+
+list = JSON.parse(list)
 	.filter(function (attr) {
 		return /[A-Z]/.test(attr);
 	})
 	.reduce(function (hash, attr) {
-		hash[attr.toLowerCase()] = attr;
+		hash[attr === 'className' ? 'class' : attr.toLowerCase()] = attr;
 
 		return hash;
-	}, {})
-;
-fs.writeFileSync(process.argv[3], JSON.stringify(list));
+	}, {});
+
+fs.writeFileSync(mapPath, JSON.stringify(list));

@@ -1,22 +1,12 @@
 const {expect} = require('chai');
 const fs = require('fs');
 const {resolve} = require('path');
-const {exec} = require('child_process');
 const ReactDOM = require('react-dom/server');
+const React = require('react');
 const engine = require('../index');
 const requireJSX = require('../require');
 const options = require('../options');
-
-engine.setOptions({
-	cache: dirPath('cache'),
-	views: dirPath('views'),
-});
-
-function rmDir(path) {
-	if (fs.existsSync(path)) {
-		exec('rm -rf ' + path);
-	}
-}
+const Context = require('../Context');
 
 function dirPath(path) {
 	var args = [__dirname].concat(path.split('/'));
@@ -24,21 +14,37 @@ function dirPath(path) {
 	return resolve.apply(null, args);
 }
 
+function read(path) {
+	return fs.readFileSync(dirPath(path)).toString();
+}
+
+function run(Component, props = {}, context = {}) {
+	return React.createElement(Context.Provider, {value: context}, React.createElement(Component, props));
+}
+
+function toHtml(children) {
+	return ReactDOM.renderToStaticMarkup(children);
+}
+
 describe('convert', function () {
+	const origin = {...options};
+
 	beforeEach(function () {
-		rmDir(dirPath('cache'));
-		rmDir(dirPath('views/cache'));
+		requireJSX.cache = {};
+		engine.setOptions(origin);
 	});
 
 	it('should convert users view', function () {
-		var html = ReactDOM.renderToStaticMarkup(requireJSX('./views/app/users', __dirname)({
+		var Component = requireJSX('./views/app/users', __dirname);
+
+		var html = toHtml(run(Component, {
 			users: [
 				{name: 'Max'},
 				{name: 'Bob'},
 			]
 		}));
 
-		expect(html).to.equal(fs.readFileSync(dirPath('html/users.html')).toString());
+		expect(html).to.equal(read('html/users.html'));
 	});
 
 	it('should convert users view with engine', function (done) {
@@ -49,24 +55,9 @@ describe('convert', function () {
 			]
 		}, function (err, html) {
 			expect(err).to.equal(null);
-			expect(html).to.equal(options.doctype + fs.readFileSync(dirPath('html/users.html')).toString());
+			expect(html).to.equal(options.doctype + read('html/users.html'));
 			done();
 		});
-	});
-
-	it('should convert with cache in views dir', function () {
-		engine.setOptions({
-			cache: dirPath('views/cache')
-		});
-
-		var html = ReactDOM.renderToStaticMarkup(requireJSX('./views/app/users', __dirname)({
-			users: [
-				{name: 'Max'},
-				{name: 'Bob'},
-			]
-		}));
-
-		expect(html).to.equal(fs.readFileSync(dirPath('html/users.html')).toString());
 	});
 
 	it('should replace html', function (done) {
@@ -100,13 +91,13 @@ describe('convert', function () {
 
 	it('should provide context', function (done) {
 		engine(dirPath('views/context.jsx'), {
-			_locals: {
+			locals: {
 				test1: 'test_1'
 			},
 			test2: 'test_2'
 		}, function (err, html) {
 			expect(err).to.equal(null);
-			expect(html).to.equal(options.doctype + fs.readFileSync(dirPath('html/context.html')).toString().replace(/\n/g, ''));
+			expect(html).to.equal(options.doctype + read('html/context.html').replace(/\n/g, ''));
 			done();
 		});
 	});

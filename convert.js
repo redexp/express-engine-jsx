@@ -4,21 +4,17 @@ const traverse = require('@babel/traverse').default;
 const template = require('@babel/template').default;
 const t = require('@babel/types');
 const fs = require('fs');
-const attrMap = require('./data/attr-map');
+const {basename} = require('path');
+const vm = require('vm');
+const attrMap = require('./attr-map');
 const options = require('./options');
 
 var createExportFunction;
 
-module.exports = function (jsxPath, outPath) {
-	var code = fs.readFileSync(jsxPath).toString();
+module.exports = function convert(jsxPath) {
+	const code = fs.readFileSync(jsxPath).toString();
 
-	var ast = parser.parse(code, {
-		sourceType: "module",
-		strictMode: false,
-		plugins: [
-			'jsx'
-		]
-	});
+	let ast = parser.parse(code, options.parserOptions);
 
 	traverse(ast, {
 		enter: function prepare(path) {
@@ -43,10 +39,7 @@ module.exports = function (jsxPath, outPath) {
 				JSXAttribute: function (attr) {
 					var name = attr.node.name.name;
 
-					if (name === 'class') {
-						attr.node.name.name = 'className';
-					}
-					else if (attrMap.hasOwnProperty(name)) {
+					if (attrMap.hasOwnProperty(name)) {
 						attr.node.name.name = attrMap[name];
 					}
 				},
@@ -63,12 +56,15 @@ module.exports = function (jsxPath, outPath) {
 	});
 
 	if (!createExportFunction) {
-		createExportFunction = template(options.template, {
-			parser: {
+		createExportFunction = template(
+			fs.readFileSync(options.templatePath).toString(),
+			{
+				parser: {
+					strictMode: false
+				},
 				strictMode: false
-			},
-			strictMode: false
-		});
+			}
+		);
 	}
 
 	ast = createExportFunction({
@@ -84,38 +80,9 @@ module.exports = function (jsxPath, outPath) {
 		]
 	});
 
-	mkdir(outPath);
+	const script = new vm.Script(res.code, {
+		filename: basename(jsxPath)
+	});
 
-	fs.writeFileSync(outPath, res.code);
+	return script;
 };
-
-function mkdir(path) {
-	path = path.replace(/\/[^\/]+\.\w+$/, '');
-
-	if (fs.existsSync(path)) return;
-
-	path = path.match(/\/[^\/]+/g);
-
-	var root = '';
-	var dirs = [];
-	var i, len;
-
-	for (i = path.length; i >= 0; i--) {
-		root = path.join('');
-
-		if (!fs.existsSync(root)) {
-			dirs.push(path.pop());
-		}
-		else {
-			break;
-		}
-	}
-
-	dirs.reverse();
-
-	for (i = 0, len = dirs.length; i < len; i++) {
-		root += dirs[i];
-
-		fs.mkdirSync(root);
-	}
-}
