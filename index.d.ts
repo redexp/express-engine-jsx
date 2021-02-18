@@ -6,10 +6,31 @@ declare namespace engine {
         doctype?: string;
         replace?: (html: string) => string;
         templatePath?: string;
-        parserOptions?: object;
+        parserOptions?: import('@babel/parser/typings/babel-parser').ParserOptions;
     }
 
-    export function setOptions(params: Options);
+    interface ConvertOptions {
+        parserOptions?: import('@babel/parser/typings/babel-parser').ParserOptions,
+        template?: string | Buffer | (({BODY}) => any),
+        templatePath?: string,
+        templateOptions?: import('babylon').BabylonOptions,
+    }
+
+    interface RunOptions {
+        path?: string,
+        context?: object,
+        scriptOptions?: import('node:vm').ScriptOptions,
+    }
+
+    export function setOptions(options: Options): void;
+
+    export function require(path: string, currentWorkingDir?: string): any;
+
+    export function convert(code: string|Buffer, options?: ConvertOptions): any;
+
+    export function run(code: string|Buffer, options?: RunOptions): any;
+
+    export const Context: import('react').Context<{ locales: object, settings: object }>;
 }
 
 export = engine;

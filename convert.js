@@ -1,20 +1,24 @@
 const babel = require('@babel/core');
 const parser = require('@babel/parser');
 const traverse = require('@babel/traverse').default;
-const template = require('@babel/template').default;
+const createTemplate = require('@babel/template').default;
 const t = require('@babel/types');
 const fs = require('fs');
-const {basename} = require('path');
-const vm = require('vm');
 const attrMap = require('./attr-map');
 const options = require('./options');
 
-var createExportFunction;
+module.exports = convert;
 
-module.exports = function convert(jsxPath) {
-	const code = fs.readFileSync(jsxPath).toString();
+convert.cache = {};
 
-	let ast = parser.parse(code, options.parserOptions);
+function convert(code, params = {}) {
+	if (code instanceof Buffer) {
+		code = code.toString();
+	}
+
+	let {parserOptions, template, templatePath, templateOptions} = params;
+
+	var ast = parser.parse(code, parserOptions || options.parserOptions);
 
 	traverse(ast, {
 		enter: function prepare(path) {
@@ -55,19 +59,33 @@ module.exports = function convert(jsxPath) {
 		}
 	});
 
-	if (!createExportFunction) {
-		createExportFunction = template(
-			fs.readFileSync(options.templatePath).toString(),
-			{
-				parser: {
-					strictMode: false
-				},
-				strictMode: false
-			}
+	templatePath = templatePath || options.templatePath;
+
+	if (templatePath && !template) {
+		if (convert.cache[templatePath]) {
+			template = convert.cache[templatePath];
+		}
+		else {
+			template = fs.readFileSync(templatePath).toString();
+		}
+	}
+
+	if (template instanceof Buffer) {
+		template = template.toString();
+	}
+
+	if (typeof template === 'string') {
+		template = createTemplate(
+			template,
+			templateOptions || options.templateOptions
 		);
 	}
 
-	ast = createExportFunction({
+	if (typeof template !== 'function') {
+		throw new Error('Undefined template');
+	}
+
+	ast = template({
 		BODY: ast.program.body
 	});
 
@@ -80,9 +98,5 @@ module.exports = function convert(jsxPath) {
 		]
 	});
 
-	const script = new vm.Script(res.code, {
-		filename: basename(jsxPath)
-	});
-
-	return script;
-};
+	return res.code;
+}

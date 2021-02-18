@@ -8,6 +8,9 @@ module.exports = {
 			'jsx'
 		],
 	},
+	templateOptions: {
+		strictMode: false
+	},
 	doctype: "<!DOCTYPE html>\n",
 	replace: null,
 	templatePath: resolve(__dirname, 'template.jsx'),

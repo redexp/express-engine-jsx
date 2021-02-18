@@ -1,6 +1,7 @@
-const {resolve, dirname} = require('path');
+const {resolve, isAbsolute} = require('path');
 const fs = require('fs');
 const convert = require('./convert');
+const run = require('./run');
 
 const local = /^\.{0,2}\//;
 const engineModule = /^express-engine-jsx(\/|$)/;
@@ -9,7 +10,7 @@ module.exports = requireJSX;
 
 requireJSX.cache = {};
 
-function requireJSX(path, currentDir) {
+function requireJSX(path, currentWorkingDir) {
 	if (!local.test(path)) {
 		if (engineModule.test(path)) {
 			return require(path.replace(engineModule, './'));
@@ -22,30 +23,41 @@ function requireJSX(path, currentDir) {
 		}
 
 		path = resolvedPath;
-		currentDir = null;
 	}
 
-	if (currentDir) {
-		path = resolve(currentDir, path);
+	if (isAbsolute(path)) {
+		currentWorkingDir = null;
+	}
+	else if (!currentWorkingDir) {
+		throw new Error(`Relative path. Required currentWorkingDir parameter`);
+	}
+	else if (!isAbsolute(currentWorkingDir)) {
+		throw new Error('currentWorkingDir must be absolute path');
+	}
+
+	if (currentWorkingDir) {
+		path = resolve(currentWorkingDir, path);
 	}
 
 	let {cache} = requireJSX;
 
-	if (cache[path]) return run(cache[path]);
+	if (cache[path]) return cache[path];
 
 	if (fs.existsSync(path + '.js')) {
 		return require(path);
 	}
 
-	if (!fs.existsSync(path + '.jsx')) {
+	const pathJSX = path + '.jsx';
+
+	if (!fs.existsSync(pathJSX)) {
 		throw new Error(`JSX file not found ${JSON.stringify(path)}`);
 	}
 
-	let script = cache[path] = convert(path + '.jsx');
+	let code = convert(fs.readFileSync(pathJSX));
 
-	script.dirname = dirname(path);
+	cache[path] = run(code, {path: pathJSX});
 
-	return run(cache[path]);
+	return cache[path];
 }
 
 function resolveJSX(path) {
@@ -57,22 +69,4 @@ function resolveJSX(path) {
 	}
 
 	return path.replace(/\.jsx$/, '');
-}
-
-function run(script) {
-	if (script.result) return script.result;
-
-	const context = {
-		module: {
-			exports: {}
-		},
-		__dirname: script.dirname,
-		require: requireJSX,
-	};
-
-	script.runInNewContext(context);
-
-	script.result = context.module.exports;
-
-	return script.result;
 }

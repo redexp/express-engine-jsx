@@ -155,8 +155,13 @@ It's a function which takes three arguments:
  * `callback` - optional Node style callback which will receive html string as second argument
 
 If you pass to `engine` only path and locals then it will return html.
+```js
+engine('/path/to/view', {prop: 'value'}, (err, html) => console.log(html));
 
-Also it has method `setOptions` which can modify [options](#options)
+const html = engine('/path/to/view', {prop: 'value'});
+```
+
+Also, it has method `engine.setOptions(options)` which can modify [options](#options)
 
 ### options
 
@@ -167,43 +172,66 @@ const options = require('express-engine-jsx/options');
 Object with optional properties:
 
  * `doctype` - string which will be prepended to output html, default value is `"<!DOCTYPE html>\n"`
- * `replace` - function which will take output html (without doctype) and it should return new html
+ * `replace` - function which will take output html (without doctype), and it should return new html
  * `templatePath` - path to wrapper of compiled jsx, default value is `express-engine-jsx/template.jsx`. Undefined variable `BODY` will be replaced with your compiled jsx code.
  * `parserOptions` - options for [babel.parser](https://babeljs.io/docs/en/babel-parser#options)
+ * `templateOptions` - options for [babel.template](https://babeljs.io/docs/en/babel-template#options)
 
 ### require
 
 ```javascript
-const requireJSX = require('express-engine-jsx/require');
+const requireJSX = engine.require || require('express-engine-jsx/require');
 ```
 
 This is a function which you can use as regular `require` but this one can run jsx files. It checks if path is jsx file and if it is then `requireJSX` will [convert](#convert) this file to js code and then run it.
 
-Every compiled jsx file will be cached to `requireJSX.cache` object where key will be path to jsx file and value will be [vm.Script](https://nodejs.org/api/vm.html#vm_class_vm_script). 
+It also takes optional second parameter - `currentWorkingDir` which should be an absolute path to file directory which calls `require` in case when main path is relative.
+
+Every compiled jsx file will be cached to `requireJSX.cache` object where key will be path to jsx file and value will be value of `module.exports` inside jsx file, usually react component. 
 You can delete any key in this cache, requireJSX will recompile jsx file on next call.
 
 ### convert
 
 ```javascript
-const convert = require('express-engine-jsx/convert');
+const convert = engine.convert || require('express-engine-jsx/convert');
 ```
 
-It is a function which can convert jsx view files to [vm.Script](https://nodejs.org/api/vm.html#vm_class_vm_script).
-```js
-const script = convert('/path/to/view.jsx');
+It is a function which can convert jsx template code to js code.
 
-const context = {
-   module: {
-      exports: {}
-   },
-   __dirname: script.dirname,
-   require: requireJSX,
-};
+Arguments:
 
-script.runInNewContext(context);
+ * `code` - string of jsx code
+ * `options`
+   * `parserOptions` - options for [babel.parser](https://babeljs.io/docs/en/babel-parser#options)
+   * `template` - string of jsx code wrapper
+   * `templatePath` - string, path to jsx code wrapper
+   * `templateOptions` - options for [babel.template](https://babeljs.io/docs/en/babel-template#options)
+    
+It also has `convert.cache` object for compiled templates where keys are `templatePath` and values are functions created by [babel.template](https://babeljs.io/docs/en/babel-template)
 
-const ViewComponent = context.module.exports;
+## run
+
+```javascript
+const run = engine.run || require('express-engine-jsx/run');
 ```
+
+Function which can execute js code with independent context and returns result of `module.exports` inside js code.
+
+Arguments:
+
+ * `code` - string of js code
+ * `options`
+   * `path` - string, path to file, usually path to jsx file
+   * `context` - object which properties will be global variables inside js code
+   * `scriptOptions` - object options for [vm.Script](https://nodejs.org/api/vm.html#vm_class_vm_script)
+    
+## Context
+
+```javascript
+const Context = engine.Context || require('express-engine-jsx/Context');
+```
+
+React context which used to bypass locals to components
 
 ## attr-map
 
@@ -246,14 +274,14 @@ In javascript you can omit `;` and write like this
 "second"
 ```
 
-It do nothing but it's valid code. In JSX you can't do same thing with elements
+It does nothing, but it's valid code. In JSX you can't do same thing with elements
 
 ```html
 <div>first</div>
 <div>second</div>
 ```
 
-It will throw compilation error. It waiting for `;` after first element. You have three options to solve this problem.
+It will throw compilation error. It's waiting for `;` after first element. You have three options to solve this problem.
 
 First - use `;`
 

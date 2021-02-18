@@ -2,6 +2,8 @@ const React = require('react');
 const ReactDOM = require('react-dom/server');
 const options = require('./options');
 const requireJSX = require('./require');
+const convert = require('./convert');
+const run = require('./run');
 const Context = require('./Context');
 
 module.exports = engine;
@@ -45,3 +47,8 @@ engine.setOptions = function (params) {
 
 	return engine;
 };
+
+engine.require = requireJSX;
+engine.convert = convert;
+engine.run = run;
+engine.Context = Context;
