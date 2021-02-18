@@ -5,6 +5,7 @@ const ReactDOM = require('react-dom/server');
 const React = require('react');
 const engine = require('../index');
 const requireJSX = require('../require');
+const convert = require('../convert');
 const options = require('../options');
 const Context = require('../Context');
 
@@ -100,5 +101,45 @@ describe('convert', function () {
 			expect(html).to.equal(options.doctype + read('html/context.html').replace(/\n/g, ''));
 			done();
 		});
+	});
+
+	it('should add onChange to input', function () {
+		var hasValue = convert(`<input value="test"/>`, {template: false});
+		var hasChecked = convert(`<input checked/>`, {template: false});
+		var notInput = convert(`<Test checked/>`, {template: false});
+		var noValue = convert(`<input type="text"/>`, {template: false});
+		var noChecked = convert(`<input type="checkbox"/>`, {template: false});
+
+		expect(hasValue).to.equal(
+			`__components.push( /*#__PURE__*/React.createElement("input", {
+  value: "test",
+  onChange: () => false
+}));`
+		);
+
+		expect(hasChecked).to.equal(
+			`__components.push( /*#__PURE__*/React.createElement("input", {
+  checked: true,
+  onChange: () => false
+}));`
+		);
+
+		expect(notInput).to.equal(
+			`__components.push( /*#__PURE__*/React.createElement(Test, {
+  checked: true
+}));`
+		);
+
+		expect(noValue).to.equal(
+			`__components.push( /*#__PURE__*/React.createElement("input", {
+  type: "text"
+}));`
+		);
+
+		expect(noChecked).to.equal(
+			`__components.push( /*#__PURE__*/React.createElement("input", {
+  type: "checkbox"
+}));`
+		);
 	});
 });

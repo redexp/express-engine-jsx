@@ -202,8 +202,9 @@ Arguments:
 
  * `code` - string of jsx code
  * `options`
+   * `addOnChange` - boolean, default `true`. Will add `onChnage={() => false}` to every `<input>` with `value` or `checked` attribute. Used to omit ReactDOM warning about `value` prop without `onChange` handler.
    * `parserOptions` - options for [babel.parser](https://babeljs.io/docs/en/babel-parser#options)
-   * `template` - string of jsx code wrapper
+   * `template` - string of jsx code wrapper. You can pass `false` if you don't want to wrap your code with `template`
    * `templatePath` - string, path to jsx code wrapper
    * `templateOptions` - options for [babel.template](https://babeljs.io/docs/en/babel-template#options)
     

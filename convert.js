@@ -16,7 +16,7 @@ function convert(code, params = {}) {
 		code = code.toString();
 	}
 
-	let {parserOptions, template, templatePath, templateOptions} = params;
+	let {addOnChange = options.addOnChange, parserOptions, template, templatePath, templateOptions} = params;
 
 	var ast = parser.parse(code, parserOptions || options.parserOptions);
 
@@ -42,6 +42,16 @@ function convert(code, params = {}) {
 			path.traverse({
 				JSXAttribute: function (attr) {
 					var name = attr.node.name.name;
+					var parent = attr.parent;
+
+					if (addOnChange && (name === 'value' || name === 'checked') && parent.name && parent.name.name === 'input') {
+						attr.parent.attributes.push(
+							t.jsxAttribute(
+								t.jsxIdentifier('onChange'),
+								t.jsxExpressionContainer(t.arrowFunctionExpression([], t.booleanLiteral(false)))
+							)
+						);
+					}
 
 					if (attrMap.hasOwnProperty(name)) {
 						attr.node.name.name = attrMap[name];
@@ -58,6 +68,8 @@ function convert(code, params = {}) {
 			path.stop();
 		}
 	});
+
+	if (template === false) return toCode(ast);
 
 	templatePath = templatePath || options.templatePath;
 
@@ -89,8 +101,10 @@ function convert(code, params = {}) {
 		BODY: ast.program.body
 	});
 
-	ast = t.program(ast);
+	return toCode(t.program(ast));
+}
 
+function toCode(ast) {
 	var res = babel.transformFromAst(ast, '', {
 		ast: false,
 		plugins: [

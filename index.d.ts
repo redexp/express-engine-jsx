@@ -3,15 +3,17 @@ declare function engine(path: string, params: object): string;
 
 declare namespace engine {
     interface Options {
-        doctype?: string;
-        replace?: (html: string) => string;
-        templatePath?: string;
-        parserOptions?: import('@babel/parser/typings/babel-parser').ParserOptions;
+        doctype?: string,
+        replace?: (html: string) => string,
+        templatePath?: string,
+        parserOptions?: import('@babel/parser/typings/babel-parser').ParserOptions,
+        addOnChange?: boolean,
     }
 
     interface ConvertOptions {
+        addOnChange?: boolean,
         parserOptions?: import('@babel/parser/typings/babel-parser').ParserOptions,
-        template?: string | Buffer | (({BODY}) => any),
+        template?: false | string | Buffer | (({BODY}) => any),
         templatePath?: string,
         templateOptions?: import('babylon').BabylonOptions,
     }
