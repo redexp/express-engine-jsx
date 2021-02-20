@@ -1,6 +1,10 @@
-var Layout = require('../layout');
-var Users = require('./components/users');
-var helper = require('./helpers/script');
+const Layout = require('../layout');
+const Users = require('./components/users');
+const helper1 = require('./helpers/script');
+const helper2 = require('./helpers/sub');
+
+if (helper1 !== 1) throw new Error('helper1');
+if (helper2 !== 2) throw new Error('helper2');
 
 <Layout>
 	<Users users={users}/>

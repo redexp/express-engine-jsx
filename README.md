@@ -185,7 +185,7 @@ const requireJSX = engine.require || require('express-engine-jsx/require');
 
 This is a function which you can use as regular `require` but this one can run jsx files. It checks if path is jsx file and if it is then `requireJSX` will [convert](#convert) this file to js code and then run it.
 
-It also takes optional second parameter - `currentWorkingDir` which should be an absolute path to file directory which calls `require` in case when main path is relative.
+It also can take optional second parameter - `currentWorkingDir` which should be an absolute path to file directory which calls `require` in case when you call `require` from some unusual place like debugger console.
 
 Every compiled jsx file will be cached to `requireJSX.cache` object where key will be path to jsx file and value will be value of `module.exports` inside jsx file, usually react component. 
 You can delete any key in this cache, requireJSX will recompile jsx file on next call.

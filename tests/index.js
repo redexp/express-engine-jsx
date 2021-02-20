@@ -142,4 +142,12 @@ describe('convert', function () {
 }));`
 		);
 	});
+
+	it('should require', function () {
+		const Layout = requireJSX('./views/layout');
+		const Users = requireJSX('./views/app/components/users');
+
+		expect(Layout).to.be.a('function');
+		expect(Users).to.be.a('function');
+	});
 });

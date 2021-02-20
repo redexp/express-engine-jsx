@@ -1,4 +1,4 @@
-const {resolve, isAbsolute} = require('path');
+const {resolve, isAbsolute, dirname} = require('path');
 const fs = require('fs');
 const convert = require('./convert');
 const run = require('./run');
@@ -29,7 +29,11 @@ function requireJSX(path, currentWorkingDir) {
 		currentWorkingDir = null;
 	}
 	else if (!currentWorkingDir) {
-		throw new Error(`Relative path. Required currentWorkingDir parameter`);
+		const site = require('callsites')()[1];
+
+		currentWorkingDir = site && dirname(site.getFileName());
+
+		if (!currentWorkingDir || !isAbsolute(currentWorkingDir)) throw new Error('currentWorkingDir required');
 	}
 	else if (!isAbsolute(currentWorkingDir)) {
 		throw new Error('currentWorkingDir must be absolute path');
@@ -43,13 +47,13 @@ function requireJSX(path, currentWorkingDir) {
 
 	if (cache[path]) return cache[path];
 
-	if (fs.existsSync(path + '.js')) {
+	if (fs.existsSync(path + '.js') || fs.existsSync(resolve(path, 'index.js'))) {
 		return require(path);
 	}
 
-	const pathJSX = path + '.jsx';
+	var pathJSX;
 
-	if (!fs.existsSync(pathJSX)) {
+	if (!fs.existsSync((pathJSX = path + '.jsx')) && !fs.existsSync((pathJSX = resolve(path, 'index.jsx')))) {
 		throw new Error(`JSX file not found ${JSON.stringify(path)}`);
 	}
 
@@ -64,8 +68,13 @@ function resolveJSX(path) {
 	try {
 		path = require.resolve(path + '.jsx');
 	}
-	catch (e) {
-		return null;
+	catch (e1) {
+		try {
+			path = require.resolve(resolve(path, 'index.jsx'));
+		}
+		catch (e2) {
+			return null;
+		}
 	}
 
 	return path.replace(/\.jsx$/, '');
