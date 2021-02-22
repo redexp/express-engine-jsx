@@ -150,4 +150,29 @@ describe('convert', function () {
 		expect(Layout).to.be.a('function');
 		expect(Users).to.be.a('function');
 	});
+
+	it('should map error stack', function (done) {
+		var path = dirPath('views/error');
+
+		engine.setOptions({sourceMap: true});
+
+		try {
+			engine(path, {test: 1});
+		}
+		catch (err) {
+			expect(err.stack).to.include(`${path}.jsx:4:7`);
+		}
+
+		engine(path, {test: 2}, function (err) {
+			try {
+				expect(err.stack).to.include(`${path}2.jsx:1:6`);
+			}
+			catch (e) {
+				done(e);
+				return;
+			}
+
+			done();
+		});
+	});
 });

@@ -1,6 +1,10 @@
 const {resolve} = require('path');
 
+const DEV = process.env.NODE_ENV !== 'production';
+
 module.exports = {
+	DEV,
+	sourceMap: DEV,
 	parserOptions: {
 		sourceType: "module",
 		strictMode: false,

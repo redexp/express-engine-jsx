@@ -1,8 +1,10 @@
-# express-engine-jsx
+express-engine-jsx
+------------------
+Full featured template engine for express
 
 [![Build Status](https://travis-ci.org/redexp/express-engine-jsx.svg?branch=master)](https://travis-ci.org/redexp/express-engine-jsx)
 
-Example of `users.jsx` view file
+Example of `users.jsx` template file
 ```jsx harmony
 const Layout = require('./layout');
 
@@ -15,7 +17,7 @@ const Layout = require('./layout');
 </Layout>
 ```
 
-Example of `layout.jsx` view file
+Example of `layout.jsx` template file
 ```jsx harmony
 <html lang={lang}>
 <head>
@@ -49,14 +51,14 @@ Output html
 
 ## How it works
 
-When you render some view, this engine takes `jsx` file like this
+When you render some template, this engine takes `jsx` file like this
 ```jsx harmony
 const Layout = require('./layout');
 
 <Layout>
   <ul class="users">
-    {users.map(user => (
-      <li key={user}>{user.name}</li>
+    {users.map((user, i) => (
+      <li key={i}>{user.name}</li>
     ))}
   </ul>
 </Layout>
@@ -84,10 +86,10 @@ module.exports = function (props) {
           React.createElement(
             'ul',
             {className: 'users'},
-            users.map(user => (
+            users.map((user, i) => (
               React.createElement(
                 'li',
-                {key: user},
+                {key: i},
                 user.name
               )
             ))
@@ -103,7 +105,7 @@ module.exports = function (props) {
 
 and now this component can be rendered to html with `ReactDOM.renderToStaticMarkup()`.
 
-As you can see, each jsx view file returns array of components and standard html attributes are converted to react attributes
+As you can see, each jsx template file returns array of components and standard html attributes are converted to react attributes
 ```html
 <div class="first" tabindex="1"></div>
 <div class="second" tabindex="2"></div>
@@ -120,6 +122,12 @@ return __components;
 
 ## Usage
 
+```
+npm i express-engine-jsx react react-dom
+```
+
+`react` and `react-dom` are peer dependencies in this package
+
 ```javascript
 const express = require('express');
 const app = express();
@@ -131,14 +139,9 @@ server.engine('jsx', engine);
 
 // optionaly
 engine.setOptions({
-  doctype: "<!DOCTYPE html>\n", // prepended string to every output html
-  templatePath: '/path/to/template.jsx', // path to base tamplete of component for all jsx templates. Default is "express-engine-jsx/template.jsx",
-  replace: (html) => {return html}, // Modify final html with this callback 
-  parserOptions: {}, // See https://babeljs.io/docs/en/babel-parser#options
+  // See options section
 });
 ```
-
-That's it, you no need to do `app.set('views', 'views')` and so on, `attachTo` will do that for you
 
 ## API
 
@@ -171,8 +174,11 @@ const options = require('express-engine-jsx/options');
 
 Object with optional properties:
 
+ * `DEV` - boolean, default `process.env.NODE_ENV !== 'production'`
+ * `sourceMap` - boolean, default `process.env.NODE_ENV !== 'production'`
  * `doctype` - string which will be prepended to output html, default value is `"<!DOCTYPE html>\n"`
  * `replace` - function which will take output html (without doctype), and it should return new html
+ * `addOnChange` - boolean, default `true`. Will add `onChnage={() => false}` to every `<input>` with `value` or `checked` attribute. Used to omit ReactDOM warning about `value` prop without `onChange` handler.
  * `templatePath` - path to wrapper of compiled jsx, default value is `express-engine-jsx/template.jsx`. Undefined variable `BODY` will be replaced with your compiled jsx code.
  * `parserOptions` - options for [babel.parser](https://babeljs.io/docs/en/babel-parser#options)
  * `templateOptions` - options for [babel.template](https://babeljs.io/docs/en/babel-template#options)
@@ -187,8 +193,8 @@ This is a function which you can use as regular `require` but this one can run j
 
 It also can take optional second parameter - `currentWorkingDir` which should be an absolute path to file directory which calls `require` in case when you call `require` from some unusual place like debugger console.
 
-Every compiled jsx file will be cached to `requireJSX.cache` object where key will be path to jsx file and value will be value of `module.exports` inside jsx file, usually react component. 
-You can delete any key in this cache, requireJSX will recompile jsx file on next call.
+Every compiled jsx file will be cached to `requireJSX.cache` object where key will be path to jsx file without extension and value will be object `{moduleExports: ReactComponent|any, map: object|null}`. 
+You can delete any key in this cache, `requireJSX` will recompile jsx file on next call.
 
 ### convert
 
@@ -202,12 +208,16 @@ Arguments:
 
  * `code` - string of jsx code
  * `options`
-   * `addOnChange` - boolean, default `true`. Will add `onChnage={() => false}` to every `<input>` with `value` or `checked` attribute. Used to omit ReactDOM warning about `value` prop without `onChange` handler.
-   * `parserOptions` - options for [babel.parser](https://babeljs.io/docs/en/babel-parser#options)
+   * `path` - string, path to jsx file. Needed only for source map.
+   * `sourceMap` - boolean, default [options.sourceMap](#options). Generate source map
+   * `addOnChange` - boolean, default [options.addOnChange](#options)
+   * `parserOptions` - object, default [options.parserOptions](#options)
    * `template` - string of jsx code wrapper. You can pass `false` if you don't want to wrap your code with `template`
-   * `templatePath` - string, path to jsx code wrapper
-   * `templateOptions` - options for [babel.template](https://babeljs.io/docs/en/babel-template#options)
+   * `templatePath` - string, default [options.templatePath](#options)
+   * `templateOptions` - object, default [options.templateOptions](#options)
     
+If you pass `sourceMap: true` or your `process.env.NODE_ENV !== 'production'` then `convert` will return object `{code: string, map: object}` instead of js code string.
+
 It also has `convert.cache` object for compiled templates where keys are `templatePath` and values are functions created by [babel.template](https://babeljs.io/docs/en/babel-template)
 
 ## run

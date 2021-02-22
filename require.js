@@ -45,7 +45,7 @@ function requireJSX(path, currentWorkingDir) {
 
 	let {cache} = requireJSX;
 
-	if (cache[path]) return cache[path];
+	if (cache[path]) return cache[path].moduleExports;
 
 	if (fs.existsSync(path + '.js') || fs.existsSync(resolve(path, 'index.js'))) {
 		return require(path);
@@ -57,11 +57,23 @@ function requireJSX(path, currentWorkingDir) {
 		throw new Error(`JSX file not found ${JSON.stringify(path)}`);
 	}
 
-	let code = convert(fs.readFileSync(pathJSX));
+	let result = convert(fs.readFileSync(pathJSX), {
+		path: pathJSX
+	});
 
-	cache[path] = run(code, {path: pathJSX});
+	let code = typeof result === 'string' ? result : result.code;
+	let map = typeof result === 'string' ? null : result.map;
 
-	return cache[path];
+	let moduleExports = run(code, {
+		path: pathJSX
+	});
+
+	cache[path] = {
+		moduleExports,
+		map,
+	};
+
+	return moduleExports;
 }
 
 function resolveJSX(path) {

@@ -16,9 +16,17 @@ function convert(code, params = {}) {
 		code = code.toString();
 	}
 
-	let {addOnChange = options.addOnChange, parserOptions, template, templatePath, templateOptions} = params;
+	let {
+		path,
+		sourceMap = options.sourceMap,
+		addOnChange = options.addOnChange,
+		parserOptions = options.parserOptions,
+		template,
+		templatePath = options.templatePath,
+		templateOptions = options.templateOptions
+	} = params;
 
-	var ast = parser.parse(code, parserOptions || options.parserOptions);
+	var ast = parser.parse(code, parserOptions);
 
 	traverse(ast, {
 		enter: function prepare(path) {
@@ -69,16 +77,21 @@ function convert(code, params = {}) {
 		}
 	});
 
-	if (template === false) return toCode(ast);
+	if (template === false) {
+		return toCode(ast, code, {
+			filename: path,
+			sourceMap,
+		});
+	}
 
-	templatePath = templatePath || options.templatePath;
+	let {cache} = convert;
 
 	if (templatePath && !template) {
 		if (convert.cache[templatePath]) {
 			template = convert.cache[templatePath];
 		}
 		else {
-			template = fs.readFileSync(templatePath).toString();
+			template = fs.readFileSync(templatePath);
 		}
 	}
 
@@ -89,8 +102,12 @@ function convert(code, params = {}) {
 	if (typeof template === 'string') {
 		template = createTemplate(
 			template,
-			templateOptions || options.templateOptions
+			templateOptions
 		);
+
+		if (templatePath) {
+			cache[templatePath] = template;
+		}
 	}
 
 	if (typeof template !== 'function') {
@@ -101,16 +118,22 @@ function convert(code, params = {}) {
 		BODY: ast.program.body
 	});
 
-	return toCode(t.program(ast));
+	return toCode(t.program(ast), code, {
+		filename: path,
+		sourceMap,
+	});
 }
 
-function toCode(ast) {
-	var res = babel.transformFromAst(ast, '', {
-		ast: false,
+function toCode(ast, code = '', params = {}) {
+	const {filename, sourceMap} = params;
+
+	var result = babel.transformFromAst(ast, code, {
+		filename,
+		sourceMap,
 		plugins: [
 			'@babel/plugin-transform-react-jsx'
 		]
 	});
 
-	return res.code;
+	return sourceMap ? result : result.code;
 }
