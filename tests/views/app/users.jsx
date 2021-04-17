@@ -1,5 +1,5 @@
-const Layout = require('../layout');
-const Users = require('./components/users');
+import Layout from '../layout';
+import Users from './components/users';
 const helper1 = require('./helpers/script');
 const helper2 = require('./helpers/sub');
 

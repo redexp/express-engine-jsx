@@ -187,7 +187,7 @@ describe('convert', function () {
 			test(id, id1, id2, id4, id5);
 			
 			<tag/>
-		`);
+		`, {sourceMap: false});
 
 		expect(() => {convert(`
 			<input/>

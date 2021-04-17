@@ -146,6 +146,29 @@ function transformRequire() {
 
 	return {
 		visitor: {
+			Program: {
+				exit: function (path) {
+					var {body} = path.node;
+
+					var node = body.find(node => (
+						t.isVariableDeclaration(node) &&
+						(node = node.declarations[0]) &&
+						t.isIdentifier(node.id) &&
+						node.id.name === 'requireJSX'
+					));
+
+					if (!node) return;
+
+					node._blockHoist = 3;
+
+					var index = body.indexOf(node);
+
+					if (index === 0) return;
+
+					body.splice(index, 1);
+					body.unshift(node);
+				}
+			},
 			CallExpression: function ({node}) {
 				var {callee, arguments: args} = node;
 				var first = args[0];
