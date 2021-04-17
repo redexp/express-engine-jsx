@@ -1,6 +1,4 @@
 const babel = require('@babel/core');
-const parser = require('@babel/parser');
-const traverse = require('@babel/traverse').default;
 const createTemplate = require('@babel/template').default;
 const t = require('@babel/types');
 const fs = require('fs');
@@ -19,121 +17,160 @@ function convert(code, params = {}) {
 	let {
 		path,
 		sourceMap = options.sourceMap,
+	} = params;
+
+	var result = babel.transformSync(code, {
+		filename: path,
+		sourceMap,
+		plugins: [
+			babel.createConfigItem([transformToComponent, params]),
+			['@babel/plugin-transform-modules-commonjs', {strictMode: false}],
+			babel.createConfigItem(transformRequire),
+			'@babel/plugin-transform-react-jsx',
+		]
+	});
+
+	return sourceMap ? result : result.code;
+}
+
+function transformToComponent(api, params) {
+	let {
 		addOnChange = options.addOnChange,
-		parserOptions = options.parserOptions,
 		template,
 		templatePath = options.templatePath,
 		templateOptions = options.templateOptions
 	} = params;
 
-	var ast = parser.parse(code, parserOptions);
+	return {
+		visitor: {
+			Program: {
+				enter: function (path) {
+					path.get('body').forEach(function (item) {
+						if (
+							item.isExpressionStatement() &&
+							(
+								item.get('expression').isJSXElement() ||
+								item.get('expression').isJSXFragment()
+							)
+						) {
+							item.replaceWith(
+								t.callExpression(
+									t.memberExpression(t.identifier('__components'), t.identifier('push')),
+									[item.node.expression]
+								)
+							);
+						}
+					});
+				},
+				exit: function (path) {
+					if (template === false) return;
 
-	traverse(ast, {
-		enter: function prepare(path) {
-			path.get('body').forEach(function (item) {
+					const {cache} = convert;
+
+					if (templatePath && !template) {
+						template = cache[templatePath] || fs.readFileSync(templatePath);
+					}
+
+					if (template instanceof Buffer) {
+						template = template.toString();
+					}
+
+					if (typeof template === 'string') {
+						template = createTemplate(
+							template,
+							templateOptions
+						);
+
+						if (templatePath) {
+							cache[templatePath] = template;
+						}
+					}
+
+					if (typeof template !== 'function') {
+						throw new Error('Undefined template');
+					}
+
+					var IMPORTS = [];
+					var BODY = [];
+
+					path.get('body').forEach(function (item) {
+						var {node} = item;
+
+						if (isExport(node)) {
+							throw item.buildCodeFrameError('export is not allowed in jsx template');
+						}
+
+						if (t.isImportDeclaration(node)) {
+							IMPORTS.push(node);
+						}
+						else {
+							BODY.push(node);
+						}
+					});
+
+					path.node.body = template({
+						IMPORTS,
+						BODY,
+					});
+				},
+			},
+			JSXAttribute: function (path) {
+				var name = path.node.name.name;
+				var parent = path.parent;
+
 				if (
-					item.isExpressionStatement() &&
-					(
-						item.node.expression.type === 'JSXElement' ||
-						item.node.expression.type === 'JSXFragment'
-					)
+					addOnChange &&
+					(name === 'value' || name === 'checked') &&
+					parent.name &&
+					parent.name.name === 'input' &&
+					parent.attributes.every(attr => attr.name.name !== 'onChange')
 				) {
-					item.replaceWith(
-						t.callExpression(
-							t.memberExpression(t.identifier('__components'), t.identifier('push')),
-							[item.node.expression]
+					parent.attributes.push(
+						t.jsxAttribute(
+							t.jsxIdentifier('onChange'),
+							t.jsxExpressionContainer(t.arrowFunctionExpression([], t.booleanLiteral(false)))
 						)
 					);
 				}
-			});
 
-			path.traverse({
-				JSXAttribute: function (attr) {
-					var name = attr.node.name.name;
-					var parent = attr.parent;
-
-					if (addOnChange && (name === 'value' || name === 'checked') && parent.name && parent.name.name === 'input') {
-						attr.parent.attributes.push(
-							t.jsxAttribute(
-								t.jsxIdentifier('onChange'),
-								t.jsxExpressionContainer(t.arrowFunctionExpression([], t.booleanLiteral(false)))
-							)
-						);
-					}
-
-					if (attrMap.hasOwnProperty(name)) {
-						attr.node.name.name = attrMap[name];
-					}
-				},
-				CallExpression: function (func) {
-					if (func.node.callee.type === 'Identifier' && func.node.callee.name === 'require') {
-						func.node.callee.name = 'requireJSX';
-						func.node.arguments.push(t.identifier('__dirname'));
-					}
+				if (attrMap.hasOwnProperty(name)) {
+					path.node.name.name = attrMap[name];
 				}
-			});
-
-			path.stop();
+			},
 		}
-	});
-
-	if (template === false) {
-		return toCode(ast, code, {
-			filename: path,
-			sourceMap,
-		});
-	}
-
-	let {cache} = convert;
-
-	if (templatePath && !template) {
-		if (convert.cache[templatePath]) {
-			template = convert.cache[templatePath];
-		}
-		else {
-			template = fs.readFileSync(templatePath);
-		}
-	}
-
-	if (template instanceof Buffer) {
-		template = template.toString();
-	}
-
-	if (typeof template === 'string') {
-		template = createTemplate(
-			template,
-			templateOptions
-		);
-
-		if (templatePath) {
-			cache[templatePath] = template;
-		}
-	}
-
-	if (typeof template !== 'function') {
-		throw new Error('Undefined template');
-	}
-
-	ast = template({
-		BODY: ast.program.body
-	});
-
-	return toCode(t.program(ast), code, {
-		filename: path,
-		sourceMap,
-	});
+	};
 }
 
-function toCode(ast, code = '', params = {}) {
-	const {filename, sourceMap} = params;
+function transformRequire() {
+	const rule = /^(react|express-engine-jsx\/.+)$/
 
-	var result = babel.transformFromAst(ast, code, {
-		filename,
-		sourceMap,
-		plugins: [
-			'@babel/plugin-transform-react-jsx'
-		]
-	});
+	return {
+		visitor: {
+			CallExpression: function ({node}) {
+				var {callee, arguments: args} = node;
+				var first = args[0];
 
-	return sourceMap ? result : result.code;
+				if (
+					t.isIdentifier(callee) &&
+					callee.name === 'require' &&
+					args.length === 1 &&
+					t.isStringLiteral(first) &&
+					!rule.test(first.value)
+				) {
+					callee.name = 'requireJSX';
+					args.push(t.identifier('__dirname'));
+				}
+			}
+		}
+	};
+}
+
+function isExport(node) {
+	return (
+		t.isExportAllDeclaration(node) ||
+		t.isExportDeclaration(node) ||
+		t.isExportDefaultDeclaration(node) ||
+		t.isExportNamedDeclaration(node) ||
+		t.isExportNamespaceSpecifier(node)
+	);
 }

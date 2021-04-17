@@ -104,11 +104,13 @@ describe('convert', function () {
 	});
 
 	it('should add onChange to input', function () {
-		var hasValue = convert(`<input value="test"/>`, {template: false});
-		var hasChecked = convert(`<input checked/>`, {template: false});
-		var notInput = convert(`<Test checked/>`, {template: false});
-		var noValue = convert(`<input type="text"/>`, {template: false});
-		var noChecked = convert(`<input type="checkbox"/>`, {template: false});
+		var params = {template: false, sourceMap: false};
+
+		var hasValue = convert(`<input value="test"/>`, params);
+		var hasChecked = convert(`<input checked/>`, params);
+		var notInput = convert(`<Test checked/>`, params);
+		var noValue = convert(`<input type="text"/>`, params);
+		var noChecked = convert(`<input type="checkbox"/>`, params);
 
 		expect(hasValue).to.equal(
 			`__components.push( /*#__PURE__*/React.createElement("input", {
@@ -174,5 +176,23 @@ describe('convert', function () {
 
 			done();
 		});
+	});
+
+	it('should handle import ... from', function () {
+		convert(`
+			import id from 'some/path';
+			import id1, {id2, id3 as id4} from 'some/path';
+			import * as id5 from 'some/path';
+			
+			test(id, id1, id2, id4, id5);
+			
+			<tag/>
+		`);
+
+		expect(() => {convert(`
+			<input/>
+			
+			export const Inp = <input/>;
+		`)}).to.throw('export is not allowed in jsx template');
 	});
 });

@@ -1,3 +1,4 @@
+IMPORTS
 const React = require('react');
 const requireJSX = require('express-engine-jsx/require');
 const EngineContext = require('express-engine-jsx/Context');
@@ -15,3 +16,6 @@ module.exports = function (props) {
 
 	return __components;
 };
+
+module.exports.default = module.exports;
+module.exports.__esModule = true;
