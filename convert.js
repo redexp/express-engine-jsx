@@ -1,5 +1,7 @@
 const babel = require('@babel/core');
 const createTemplate = require('@babel/template').default;
+const transformModulesCommonjs = require('@babel/plugin-transform-modules-commonjs');
+const transformReactJsx = require('@babel/plugin-transform-react-jsx');
 const t = require('@babel/types');
 const fs = require('fs');
 const attrMap = require('./attr-map');
@@ -24,9 +26,9 @@ function convert(code, params = {}) {
 		sourceMap,
 		plugins: [
 			babel.createConfigItem([transformToComponent, params]),
-			['@babel/plugin-transform-modules-commonjs', {strictMode: false}],
+			babel.createConfigItem([transformModulesCommonjs, {strictMode: false}]),
 			babel.createConfigItem(transformRequire),
-			'@babel/plugin-transform-react-jsx',
+			babel.createConfigItem(transformReactJsx),
 		]
 	});
 

@@ -1,6 +1,6 @@
 express-engine-jsx
 ------------------
-Full featured template engine for express
+Full-featured template engine for express
 
 [![Build Status](https://travis-ci.com/redexp/express-engine-jsx.svg?branch=master)](https://travis-ci.com/redexp/express-engine-jsx)
 

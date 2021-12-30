@@ -28,7 +28,7 @@ declare namespace engine {
     interface RunOptions {
         path?: string,
         context?: object,
-        scriptOptions?: import('node:vm').ScriptOptions,
+        scriptOptions?: import('vm').ScriptOptions,
     }
 
     export function setOptions(options: Options): void;
