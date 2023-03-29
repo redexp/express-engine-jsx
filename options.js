@@ -1,4 +1,5 @@
 const {resolve} = require('path');
+const {renderToStaticMarkup} = require('react-dom/server');
 
 const DEV = process.env.NODE_ENV !== 'production';
 
@@ -18,5 +19,6 @@ module.exports = {
 	addOnChange: true,
 	doctype: "<!DOCTYPE html>\n",
 	replace: null,
+	renderer: renderToStaticMarkup,
 	templatePath: resolve(__dirname, 'template.jsx'),
 };

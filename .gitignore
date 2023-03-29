@@ -1,4 +1,4 @@
-.idea/
-node_modules/
-tests/cache/
-tests/views/cache/
+.idea
+node_modules
+tests/cache
+tests/views/cache

@@ -4,6 +4,19 @@ Full-featured template engine for express
 
 [![Build Status](https://travis-ci.com/redexp/express-engine-jsx.svg?branch=master)](https://travis-ci.com/redexp/express-engine-jsx)
 
+* [How it works](#how-it-works)
+* [Usage](#usage)
+* [API](#api)
+  * [engine](#engine)
+  * [options](#options)
+  * [require](#require)
+  * [convert](#convert)
+  * [run](#run)
+* [Context](#context)
+* [attr-map](#attr-map)
+* [How to integrate to other engine](#how-to-integrate-to-other-engine)
+* [Problem with more than one component in template root](#problem-with-more-than-one-component-in-template-root)
+
 Example of `users.jsx` template file
 ```jsx harmony
 const Layout = require('./layout');
@@ -155,7 +168,7 @@ It's a function which takes three arguments:
 
  * `path` - path to jsx file
  * `locals` - object with properties which will be local variables in jsx file
- * `callback` - optional Node style callback which will receive html string as second argument
+ * `callback` - optional, Node style callback which will receive result of `options.renderer` as second argument
 
 If you pass to `engine` only path and locals then it will return html.
 ```js
@@ -177,6 +190,7 @@ Object with optional properties:
  * `DEV` - boolean, default `process.env.NODE_ENV !== 'production'`
  * `sourceMap` - boolean, default `process.env.NODE_ENV !== 'production'`
  * `doctype` - string which will be prepended to output html, default value is `"<!DOCTYPE html>\n"`
+ * `renderer` - function, default `ReactDOM.renderToStaticMarkup`
  * `replace` - function which will take output html (without doctype), and it should return new html
  * `addOnChange` - boolean, default `true`. Will add `onChnage={() => false}` to every `<input>` with `value` or `checked` attribute. Used to omit ReactDOM warning about `value` prop without `onChange` handler.
  * `templatePath` - path to wrapper of compiled jsx, default value is `express-engine-jsx/template.jsx`. Undefined variable `BODY` will be replaced with your compiled jsx code.

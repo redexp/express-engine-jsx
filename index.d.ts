@@ -1,16 +1,23 @@
+import {Stream} from "node:stream";
+import {ScriptOptions} from "node:vm";
+import {ParserOptions} from '@babel/parser/typings/babel-parser';
+import {BabylonOptions} from 'babylon';
+import {createElement, Context} from 'react';
+
 declare function engine(path: string, params: object, cb: HtmlCallback): void;
 declare function engine(path: string, cb: HtmlCallback): void;
-declare function engine(path: string, params?: object): string;
+declare function engine(path: string, params?: object): HtmlResult;
 
-type HtmlCallback = (err: null|Error, html: string) => void;
+type HtmlCallback = (err: null|Error, html: HtmlResult) => void;
 
 declare namespace engine {
     interface Options {
         DEV?: boolean,
         doctype?: string,
-        replace?: (html: string) => string,
+        renderer?: (node: ReturnType<typeof createElement>) => HtmlResult,
+        replace?: (html: HtmlResult, params: object) => HtmlResult,
         templatePath?: string,
-        parserOptions?: import('@babel/parser/typings/babel-parser').ParserOptions,
+        parserOptions?: ParserOptions,
         sourceMap?: boolean,
         addOnChange?: boolean,
     }
@@ -19,27 +26,30 @@ declare namespace engine {
         path?: string,
         sourceMap?: boolean,
         addOnChange?: boolean,
-        parserOptions?: import('@babel/parser/typings/babel-parser').ParserOptions,
-        template?: false | string | Buffer | (({BODY}) => any),
+        parserOptions?: ParserOptions,
+        template?: false | JsxCode | (({BODY}) => any),
         templatePath?: string,
-        templateOptions?: import('babylon').BabylonOptions,
+        templateOptions?: BabylonOptions,
     }
 
     interface RunOptions {
         path?: string,
         context?: object,
-        scriptOptions?: import('vm').ScriptOptions,
+        scriptOptions?: ScriptOptions,
     }
 
     export function setOptions(options: Options): void;
 
     export function require(path: string, currentWorkingDir?: string): any;
 
-    export function convert(code: string|Buffer, options?: ConvertOptions): string|{code: string, map: null|object};
+    export function convert(code: JsxCode, options?: ConvertOptions): string|{code: string, map: null|object};
 
-    export function run(code: string|Buffer, options?: RunOptions): any;
+    export function run(code: JsxCode, options?: RunOptions): any;
 
-    export const Context: import('react').Context<{ locales: object, settings: object }>;
+    export const Context: Context<{locales: object, settings: object}>;
 }
 
 export = engine;
+
+type JsxCode = string | Buffer;
+type HtmlResult = string | Stream;

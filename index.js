@@ -1,5 +1,5 @@
 const React = require('react');
-const ReactDOM = require('react-dom/server');
+const Combiner = require('combined-stream');
 const options = require('./options');
 const requireJSX = require('./require');
 const convert = require('./convert');
@@ -21,8 +21,10 @@ function engine(path, params = {}, cb = null) {
 		settings: params.settings,
 	};
 
+	const {renderer, replace, doctype} = options;
+
 	try {
-		var html = ReactDOM.renderToStaticMarkup(
+		var html = renderer(
 			React.createElement(Context.Provider, {value: context},
 				React.createElement(Component, params)
 			)
@@ -62,12 +64,20 @@ function engine(path, params = {}, cb = null) {
 		}
 	}
 
-	if (options.replace) {
-		html = options.replace(html);
+	if (replace) {
+		html = replace(html, params);
 	}
 
-	if (options.doctype) {
-		html = options.doctype + html;
+	if (doctype) {
+		if (typeof html === 'string') {
+			html = doctype + html;
+		}
+		else {
+			const combiner = new Combiner();
+			combiner.append(doctype);
+			combiner.append(html);
+			html = combiner;
+		}
 	}
 
 	if (cb) {

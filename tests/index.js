@@ -1,6 +1,7 @@
 const {expect} = require('chai');
 const fs = require('fs');
 const {resolve} = require('path');
+const {PassThrough} = require('stream');
 const ReactDOM = require('react-dom/server');
 const React = require('react');
 const engine = require('../index');
@@ -62,29 +63,30 @@ describe('convert', function () {
 	});
 
 	it('should replace html', function (done) {
+		const v4 = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n';
+		const v5 = "<!DOCTYPE html>\n";
+
 		engine.setOptions({
 			doctype: '',
-			replace: function (html) {
-				return html.replace(/^<html doctype="(\d+)"/, function (x, version) {
-					var doctype = version === '4' ?
-						'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n' :
-						"<!DOCTYPE html>\n"
-					;
+			replace: function (html, {version}) {
+				var doctype = version === 4 ?
+					v4 :
+					v5
+				;
 
-					return doctype + '<html';
-				})
+				return doctype + html;
 			}
 		});
 
 		engine(dirPath('views/doctype.jsx'), {version: 4}, function (err, html) {
 			expect(html).to.equal(
-				`<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n<html></html>`
+				v4 + `<html doctype="4"></html>`
 			);
 		});
 
 		engine(dirPath('views/doctype.jsx'), {version: 5}, function (err, html) {
 			expect(html).to.equal(
-				`<!DOCTYPE html>\n<html></html>`
+				v5 + `<html doctype="5"></html>`
 			);
 			done();
 		});
@@ -194,5 +196,35 @@ describe('convert', function () {
 			
 			export const Inp = <input/>;
 		`)}).to.throw('export is not allowed in jsx template');
+	});
+
+	it('should handle renderer option', function (done) {
+		engine.setOptions({
+			renderer: ReactDOM.renderToStaticNodeStream
+		});
+
+		let result = '';
+
+		engine(dirPath('views/app/users.jsx'), {
+			users: [
+				{name: 'Max'},
+				{name: 'Bob'},
+			]
+		})
+		.pipe(new PassThrough())
+		.on('data', data => {
+			result += data.toString()
+		})
+		.on('error', done)
+		.on('end', function () {
+			try {
+				expect(result).to.equal(origin.doctype + read('html/users.html'));
+			}
+			catch (err) {
+				return done(err);
+			}
+
+			done();
+		});
 	});
 });
