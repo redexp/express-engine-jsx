@@ -146,7 +146,7 @@ const express = require('express');
 const app = express();
 const engine = require('express-engine-jsx');
 
-server.set('views', '/path/to/views');
+server.set('views', './path/to/views');
 server.set('view engine', 'jsx');
 server.engine('jsx', engine);
 
@@ -167,17 +167,18 @@ const engine = require('express-engine-jsx');
 It's a function which takes three arguments:
 
  * `path` - path to jsx file
- * `locals` - object with properties which will be local variables in jsx file
+ * `props` - object with properties which will be local variables in jsx file. `locals` property will be visible for all deep components. Properties of `locals` object will be as local variables in all deep components.   
+ * `options` - optional, object which overwrites any of next three [global options](#options) `doctype`, `replace`, `renderer`
  * `callback` - optional, Node style callback which will receive result of `options.renderer` as second argument
 
-If you pass to `engine` only path and locals then it will return html.
+If you pass to `engine` arguments without callback then it will return result of `renderer` of [global options](#options).
 ```js
 engine('/path/to/view', {prop: 'value'}, (err, html) => console.log(html));
 
 const html = engine('/path/to/view', {prop: 'value'});
 ```
 
-Also, it has method `engine.setOptions(options)` which can modify [options](#options)
+Also, it has method `engine.setOptions(options)` which can modify [global options](#options)
 
 ### options
 

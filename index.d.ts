@@ -4,24 +4,14 @@ import {ParserOptions} from '@babel/parser/typings/babel-parser';
 import {BabylonOptions} from 'babylon';
 import {createElement, Context} from 'react';
 
-declare function engine(path: string, params: object, cb: HtmlCallback): void;
+declare function engine(path: string, params: Params, ops: Ops, cb: HtmlCallback): void;
+declare function engine(path: string, params: Params, cb: HtmlCallback): void;
 declare function engine(path: string, cb: HtmlCallback): void;
-declare function engine(path: string, params?: object): HtmlResult;
+declare function engine(path: string, params?: Params, ops?: Ops): HtmlResult;
 
 type HtmlCallback = (err: null|Error, html: HtmlResult) => void;
 
 declare namespace engine {
-    interface Options {
-        DEV?: boolean,
-        doctype?: string,
-        renderer?: (node: ReturnType<typeof createElement>) => HtmlResult,
-        replace?: (html: HtmlResult, params: object) => HtmlResult,
-        templatePath?: string,
-        parserOptions?: ParserOptions,
-        sourceMap?: boolean,
-        addOnChange?: boolean,
-    }
-
     interface ConvertOptions {
         path?: string,
         sourceMap?: boolean,
@@ -51,5 +41,25 @@ declare namespace engine {
 
 export = engine;
 
+interface Params {
+    locals?: object,
+    _locals?: object,
+    settings?: object,
+    [prop: string]: any,
+}
+
 type JsxCode = string | Buffer;
 type HtmlResult = string | Stream;
+
+interface Options {
+    DEV?: boolean,
+    doctype?: string,
+    renderer?: (node: ReturnType<typeof createElement>) => HtmlResult,
+    replace?: (html: HtmlResult, params: object) => HtmlResult,
+    templatePath?: string,
+    parserOptions?: ParserOptions,
+    sourceMap?: boolean,
+    addOnChange?: boolean,
+}
+
+type Ops = Pick<Options, 'renderer' | 'replace' | 'doctype'>;

@@ -199,10 +199,6 @@ describe('convert', function () {
 	});
 
 	it('should handle renderer option', function (done) {
-		engine.setOptions({
-			renderer: ReactDOM.renderToStaticNodeStream
-		});
-
 		let result = '';
 
 		engine(dirPath('views/app/users.jsx'), {
@@ -210,6 +206,8 @@ describe('convert', function () {
 				{name: 'Max'},
 				{name: 'Bob'},
 			]
+		}, {
+			renderer: ReactDOM.renderToStaticNodeStream
 		})
 		.pipe(new PassThrough())
 		.on('data', data => {

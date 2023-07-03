@@ -8,10 +8,15 @@ const Context = require('./Context');
 
 module.exports = engine;
 
-function engine(path, params = {}, cb = null) {
+function engine(path, params = {}, ops = null, cb = null) {
 	if (typeof params === 'function') {
 		cb = params;
 		params = {};
+		ops = null;
+	}
+	else if (typeof ops === 'function') {
+		cb = ops;
+		ops = null;
 	}
 
 	const Component = requireJSX(path.replace(/\.jsx$/, ''));
@@ -21,7 +26,7 @@ function engine(path, params = {}, cb = null) {
 		settings: params.settings,
 	};
 
-	const {renderer, replace, doctype} = options;
+	const {renderer, replace, doctype} = Object.assign({}, options, ops);
 
 	try {
 		var html = renderer(
