@@ -109,6 +109,7 @@ describe('convert', function () {
 		var params = {template: false, sourceMap: false};
 
 		var hasValue = convert(`<input value="test"/>`, params);
+		var hasSpread = convert(`<input value="test" {...spreadTest}/>`, params);
 		var hasChecked = convert(`<input checked/>`, params);
 		var notInput = convert(`<Test checked/>`, params);
 		var noValue = convert(`<input type="text"/>`, params);
@@ -120,6 +121,8 @@ describe('convert', function () {
   onChange: () => false
 }));`
 		);
+
+		expect(hasSpread).to.includes('spreadTest').and.includes('onChange: () => false');
 
 		expect(hasChecked).to.equal(
 			`__components.push( /*#__PURE__*/React.createElement("input", {
@@ -224,5 +227,17 @@ describe('convert', function () {
 
 			done();
 		});
+	});
+
+	it('should handle pure html/svg attributes', function () {
+		const params = {template: false, sourceMap: false};
+
+		var code = convert(`<label for="test"/>`, params);
+
+		expect(code).to.includes('htmlFor');
+
+		code = convert(`<circle stroke-width="6"/>`, params);
+
+		expect(code).to.includes('strokeWidth');
 	});
 });

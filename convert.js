@@ -125,7 +125,10 @@ function transformToComponent(api, params) {
 					(name === 'value' || name === 'checked') &&
 					parent.name &&
 					parent.name.name === 'input' &&
-					parent.attributes.every(attr => attr.name.name !== 'onChange')
+					parent.attributes.every(attr => (
+						!t.isJSXAttribute(attr) ||
+						attr.name.name !== 'onChange'
+					))
 				) {
 					parent.attributes.push(
 						t.jsxAttribute(
@@ -136,7 +139,8 @@ function transformToComponent(api, params) {
 				}
 
 				if (attrMap.hasOwnProperty(name)) {
-					path.node.name.name = attrMap[name];
+					name = attrMap[name];
+					path.node.name.name = name;
 				}
 			},
 		}
