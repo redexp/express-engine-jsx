@@ -1,5 +1,5 @@
 const {resolve, isAbsolute, dirname} = require('path');
-const fs = require('fs');
+const {existsSync, readFileSync} = require('fs');
 const convert = require('./convert');
 const run = require('./run');
 
@@ -8,7 +8,7 @@ const engineModule = /^express-engine-jsx(\/|$)/;
 
 module.exports = requireJSX;
 
-requireJSX.cache = {};
+requireJSX.cache = new Map();
 
 function requireJSX(path, currentWorkingDir) {
 	if (!local.test(path)) {
@@ -16,7 +16,7 @@ function requireJSX(path, currentWorkingDir) {
 			return require(path.replace(engineModule, './'));
 		}
 
-		var resolvedPath = resolveJSX(path);
+		const resolvedPath = resolveJSX(path);
 
 		if (!resolvedPath) {
 			return require(path);
@@ -43,35 +43,35 @@ function requireJSX(path, currentWorkingDir) {
 		path = resolve(currentWorkingDir, path);
 	}
 
-	let {cache} = requireJSX;
+	const {cache} = requireJSX;
 
-	if (cache[path]) return cache[path].moduleExports;
+	if (cache.has(path)) return cache.get(path).moduleExports;
 
-	if (fs.existsSync(path + '.js') || fs.existsSync(resolve(path, 'index.js'))) {
+	if (existsSync(path + '.js') || existsSync(resolve(path, 'index.js'))) {
 		return require(path);
 	}
 
-	var pathJSX;
+	let pathJSX;
 
-	if (!fs.existsSync((pathJSX = path + '.jsx')) && !fs.existsSync((pathJSX = resolve(path, 'index.jsx')))) {
+	if (!existsSync((pathJSX = path + '.jsx')) && !existsSync((pathJSX = resolve(path, 'index.jsx')))) {
 		throw new Error(`JSX file not found ${JSON.stringify(path)}`);
 	}
 
-	let result = convert(fs.readFileSync(pathJSX), {
+	const result = convert(readFileSync(pathJSX), {
 		path: pathJSX
 	});
 
-	let code = typeof result === 'string' ? result : result.code;
-	let map = typeof result === 'string' ? null : result.map;
+	const code = typeof result === 'string' ? result : result.code;
+	const map = typeof result === 'string' ? null : result.map;
 
-	let moduleExports = run(code, {
+	const moduleExports = run(code, {
 		path: pathJSX
 	});
 
-	cache[path] = {
+	cache.set(path, {
 		moduleExports,
 		map,
-	};
+	});
 
 	return moduleExports;
 }

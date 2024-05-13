@@ -3,13 +3,13 @@ const createTemplate = require('@babel/template').default;
 const transformModulesCommonjs = require('@babel/plugin-transform-modules-commonjs');
 const transformReactJsx = require('@babel/plugin-transform-react-jsx');
 const t = require('@babel/types');
-const fs = require('fs');
+const {readFileSync} = require('fs');
 const attrMap = require('./attr-map');
 const options = require('./options');
 
 module.exports = convert;
 
-convert.cache = {};
+convert.cache = new Map();
 
 function convert(code, params = {}) {
 	if (code instanceof Buffer) {
@@ -21,7 +21,7 @@ function convert(code, params = {}) {
 		sourceMap = options.sourceMap,
 	} = params;
 
-	var result = babel.transformSync(code, {
+	const result = babel.transformSync(code, {
 		filename: path,
 		sourceMap,
 		plugins: [
@@ -43,6 +43,7 @@ function transformToComponent(api, params) {
 		templateOptions = options.templateOptions
 	} = params;
 
+	// noinspection JSUnusedGlobalSymbols
 	return {
 		visitor: {
 			Program: {
@@ -70,7 +71,7 @@ function transformToComponent(api, params) {
 					const {cache} = convert;
 
 					if (templatePath && !template) {
-						template = cache[templatePath] || fs.readFileSync(templatePath);
+						template = cache.has(templatePath) ? cache.get(templatePath) : readFileSync(templatePath);
 					}
 
 					if (template instanceof Buffer) {
@@ -84,7 +85,7 @@ function transformToComponent(api, params) {
 						);
 
 						if (templatePath) {
-							cache[templatePath] = template;
+							cache.set(templatePath, template);
 						}
 					}
 
@@ -92,11 +93,11 @@ function transformToComponent(api, params) {
 						throw new Error('Undefined template');
 					}
 
-					var IMPORTS = [];
-					var BODY = [];
+					const IMPORTS = [];
+					const BODY = [];
 
 					path.get('body').forEach(function (item) {
-						var {node} = item;
+						const {node} = item;
 
 						if (isExport(node)) {
 							throw item.buildCodeFrameError('export is not allowed in jsx template');
@@ -117,8 +118,8 @@ function transformToComponent(api, params) {
 				},
 			},
 			JSXAttribute: function (path) {
-				var name = path.node.name.name;
-				var parent = path.parent;
+				let name = path.node.name.name;
+				const parent = path.parent;
 
 				if (
 					addOnChange &&
@@ -150,13 +151,14 @@ function transformToComponent(api, params) {
 function transformRequire() {
 	const rule = /^(react|express-engine-jsx\/.+)$/
 
+	// noinspection JSUnusedGlobalSymbols
 	return {
 		visitor: {
 			Program: {
 				exit: function (path) {
-					var {body} = path.node;
+					const {body} = path.node;
 
-					var node = body.find(node => (
+					const node = body.find(node => (
 						t.isVariableDeclaration(node) &&
 						(node = node.declarations[0]) &&
 						t.isIdentifier(node.id) &&
@@ -167,7 +169,7 @@ function transformRequire() {
 
 					node._blockHoist = 3;
 
-					var index = body.indexOf(node);
+					const index = body.indexOf(node);
 
 					if (index === 0) return;
 
@@ -176,8 +178,8 @@ function transformRequire() {
 				}
 			},
 			CallExpression: function ({node}) {
-				var {callee, arguments: args} = node;
-				var first = args[0];
+				const {callee, arguments: args} = node;
+				const first = args[0];
 
 				if (
 					t.isIdentifier(callee) &&

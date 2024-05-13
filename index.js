@@ -36,20 +36,20 @@ function engine(path, params = {}, ops = null, cb = null) {
 		);
 	}
 	catch (err) {
-		if (err && typeof err.stack === 'string') {
-			Object.keys(requireJSX.cache).forEach(function (path) {
-				var {map} = requireJSX.cache[path];
+		const stack = err && typeof err.stack === 'string' && err.stack;
 
-				if (!map) return;
+		if (stack) {
+			for (const [path, {map}] of requireJSX.cache) {
+				if (!map) continue;
 
 				let pathJSX = path + '.jsx';
 
-				if (!err.stack.includes(pathJSX)) return;
+				if (!stack.includes(pathJSX)) continue;
 
 				const {SourceMapConsumer} = require('source-map-sync');
 
 				SourceMapConsumer.with(map, null, function (consumer) {
-					err.stack = err.stack.replace(new RegExp(escapeRegexp(pathJSX) + ":(\\d+):(\\d+)", "g"), function (x, l, c) {
+					err.stack = stack.replace(new RegExp(escapeRegexp(pathJSX) + ":(\\d+):(\\d+)", "g"), function (x, l, c) {
 						let {line, column} = consumer.originalPositionFor({line: Number(l), column: Number(c)});
 
 						if (line === null) return x;
@@ -57,7 +57,7 @@ function engine(path, params = {}, ops = null, cb = null) {
 						return `${pathJSX}:${line}:${column}`;
 					});
 				});
-			});
+			}
 		}
 
 		if (cb) {

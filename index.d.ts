@@ -30,9 +30,15 @@ declare namespace engine {
 
     export function setOptions(options: Options): void;
 
-    export function require(path: string, currentWorkingDir?: string): any;
+    export type require = {
+        cache: Map<string, {moduleExports: any, map: any}>,
+        (path: string, currentWorkingDir?: string): any
+    };
 
-    export function convert(code: JsxCode, options?: ConvertOptions): string|{code: string, map: null|object};
+    export type convert = {
+        cache: Map<string, string>,
+        (code: JsxCode, options?: ConvertOptions): string|{code: string, map: null|object},
+    };
 
     export function run(code: JsxCode, options?: RunOptions): any;
 

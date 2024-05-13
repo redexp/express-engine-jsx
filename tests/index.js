@@ -32,7 +32,7 @@ describe('convert', function () {
 	const origin = {...options};
 
 	beforeEach(function () {
-		requireJSX.cache = {};
+		requireJSX.cache = new Map();
 		engine.setOptions(origin);
 	});
 
